@@ -1,0 +1,10 @@
+langchain
+langchain-core
+langchain-openai
+langchain-anthropic
+langchain-google-genai
+langchain-xai
+python-dotenv
+tavily-python
+rich
+pydantic
