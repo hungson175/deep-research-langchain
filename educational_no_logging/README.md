@@ -1,10 +1,14 @@
 # Deep Research System - Educational Version
 
-This is a simplified, consolidated version of the Deep Research System for educational purposes. All logging and visual formatting have been removed to make the code easier to read and understand.
+This is a minimal, clean version of the Deep Research System for educational purposes.
+All logging and visual formatting have been removed to focus on the core architecture.
 
 ## File Structure
 
-- `deep_research_system_complete.py` - Complete system in a single file containing all classes and modules
+- `core_system.py` - Main system with only essential classes (~250 lines)
+- `prompts.py` - All system prompts in one place
+- `utils.py` - Helper functions, cache strategies, and tools
+- `deep_research_system_complete.py` - Legacy complete version (all in one file)
 
 ## Key Components
 
@@ -60,11 +64,11 @@ Markdown File Output
 
 The system implements intelligent caching for Anthropic models using `cache_control` to optimize token usage. Other models use a standard message strategy without caching.
 
-## Running the System
+## Quick Start
 
 ```python
 import asyncio
-from deep_research_system_complete import DeepResearch
+from core_system import DeepResearch
 
 async def main():
     system = DeepResearch()
@@ -73,6 +77,19 @@ async def main():
 
 asyncio.run(main())
 ```
+
+## Understanding the Flow
+
+The system follows a simple 3-phase pipeline:
+
+```
+User Input → ResearchBriefCreator → Supervisor → DeepResearch → Report
+             (Clarification)         (Research)   (Generation)
+```
+
+1. **ResearchBriefCreator** clarifies what the user wants
+2. **Supervisor** coordinates multiple **Researcher** agents in parallel
+3. **DeepResearch** generates the final report from all findings
 
 ## Environment Variables Required
 
