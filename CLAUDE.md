@@ -23,6 +23,10 @@ python deep_research_system.py
 python clarifier.py    # Test clarification phase
 python supervisor.py   # Test supervisor coordination
 python researcher.py   # Test individual researcher
+
+# Run educational version (no logging)
+cd educational_no_logging
+python deep_research_system_complete.py
 ```
 
 ## Architecture Overview
@@ -44,12 +48,16 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 - `DeepResearch` class orchestrates the entire pipeline
 - Collects research notes from all agents
 - Generates comprehensive final report using Claude Sonnet model
+- Automatically saves reports to `./reports/` directory with timestamp-based filenames
 
 ## Key Components
 
 - **Cache Strategy**: `cache_strategy.py` implements caching for Anthropic models to optimize token usage
 - **Prompts**: All system prompts centralized in `prompts.py`
 - **Utils**: Helper functions in `utils.py` for formatting, logging, and tool management
+- **Reports Directory**: `./reports/` stores saved research reports (gitignored)
+- **Educational Version**: `./educational_no_logging/` contains consolidated clean code for learning
+- **Visual Logging**: Rich library provides beautiful console output with progress tracking
 - **Models Used**:
   - Clarifier: `xai:grok-code-fast-1`
   - Supervisor: `xai:grok-code-fast-1`

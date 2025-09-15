@@ -55,6 +55,7 @@ async def main():
     report = await system.run("Compare Deep Research products from OpenAI vs Google")
 
     print(report)
+    # Report is automatically saved to ./reports/ directory
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -75,6 +76,9 @@ The system operates in three phases:
 - 📝 **Structured Reports** - Professional reports with proper citations
 - 🚀 **Parallel Processing** - Multiple agents work simultaneously for faster results
 - 💬 **Interactive Clarification** - Ensures research meets your exact needs
+- 💾 **Automatic Report Saving** - Reports saved to `./reports/` with timestamps
+- 🎨 **Rich Console Output** - Beautiful visual progress tracking with Rich library
+- 📚 **Educational Version** - Clean, consolidated code version for learning
 
 ## Project Structure
 
@@ -85,13 +89,40 @@ The system operates in three phases:
 ├── researcher.py            # Individual research agents
 ├── prompts.py              # System prompts
 ├── cache_strategy.py       # Token optimization
-└── utils.py               # Helper functions
+├── utils.py               # Helper functions
+├── reports/                # Saved research reports (gitignored)
+│   └── .gitignore         # Ignores report files
+└── educational_no_logging/ # Educational version without logging
+    ├── README.md          # Educational documentation
+    └── deep_research_system_complete.py  # All modules in one file
 ```
 
 ## Requirements
 
 - Python 3.13+
 - API Keys for Anthropic, XAI, and Tavily services
+
+## Report Saving
+
+All research reports are automatically saved to the `./reports/` directory with descriptive filenames:
+- Format: `{short_description}_{YYYYMMDD_HHMM}.md`
+- Example: `compare_deep_research_products_20250915_1430.md`
+- Each report includes metadata (date, original query) at the top
+- The reports directory is gitignored to keep your research private
+
+## Educational Version
+
+For learning and understanding the system architecture, check out the `educational_no_logging/` directory:
+- **Single consolidated file** - All modules in one place for easier reading
+- **No visual clutter** - Removed all logging and Rich formatting
+- **Same core logic** - Identical functionality, just cleaner presentation
+- **Well-documented** - Includes comprehensive README explaining the architecture
+
+To use the educational version:
+```python
+# From educational_no_logging/deep_research_system_complete.py
+from deep_research_system_complete import DeepResearch
+```
 
 ## Example Research Topics
 
