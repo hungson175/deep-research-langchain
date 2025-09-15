@@ -146,7 +146,10 @@ class Supervisor:
             self.messages.append(response)
             researcher_iteration += 1
         self.notes = get_notes_from_tool_calls(self.messages)
-        return response
+        return {
+            "final_response": response.content,
+            "notes": self.notes 
+        }
 
 BIG_BRIEF = """
 I want to research the best specialty coffee shops in Vietnam's main cities, such as Hanoi, 
@@ -160,6 +163,11 @@ or Google Reviews, and local tourism sites in Vietnamese or English.
 async def main():
     supervisor = Supervisor(research_brief=BIG_BRIEF)
     result = await supervisor.start_supervision()
+    print("Final Response:")
+    print(result["final_response"])
+    print("Notes:")
+    print(result["notes"])
+    
     format_messages(supervisor.messages)
         
 if __name__ == "__main__":

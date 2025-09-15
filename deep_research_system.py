@@ -47,12 +47,11 @@ class DeepResearch:
 
         # Phase 2: Conduct supervised research
         supervisor = Supervisor(research_brief=research_brief)
-        await supervisor.start_supervision()
-        research_notes = supervisor.notes
+        result = await supervisor.start_supervision()
+        research_notes = result["notes"]
 
         # Phase 3: Generate final report
         return await self.generate_final_report(research_brief, research_notes)
-
 
 async def main():
     system = DeepResearch()
