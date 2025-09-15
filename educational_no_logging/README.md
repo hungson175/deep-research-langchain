@@ -5,10 +5,9 @@ All logging and visual formatting have been removed to focus on the core archite
 
 ## File Structure
 
-- `core_system.py` - Main system with only essential classes (~250 lines)
-- `prompts.py` - All system prompts in one place
-- `utils.py` - Helper functions, cache strategies, and tools
-- `deep_research_system_complete.py` - Legacy complete version (all in one file)
+- `core_system.py` - Main system with only essential classes (~310 lines)
+- `prompts.py` - All system prompts in one place (~78 lines)
+- `utils.py` - Helper functions, cache strategies, and tools (~159 lines)
 
 ## Key Components
 

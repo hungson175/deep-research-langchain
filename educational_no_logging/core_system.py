@@ -6,12 +6,12 @@ Utils and prompts are in separate files for clarity.
 """
 
 import asyncio
-from typing import Union, List
+from typing import Union
 from datetime import datetime
 from pathlib import Path
 import re
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, filter_messages
 from langchain_core.tools import tool
