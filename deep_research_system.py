@@ -3,6 +3,9 @@ Full Multi-Agent Research System (Non-LangGraph Implementation)
 """
 
 import asyncio
+import re
+from datetime import datetime
+from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -58,7 +61,44 @@ class DeepResearch:
         console.print("[green]✅ Final report generation complete[/green]")
         return response.content
 
-    async def run(self, user_input: str) -> str:
+    def _save_report_to_file(self, report: str, user_input: str) -> str:
+        """Save the report to a markdown file in the reports directory.
+
+        Args:
+            report: The generated report content
+            user_input: The original user input to create a descriptive filename
+
+        Returns:
+            The path to the saved report file
+        """
+        # Create a short description from user input (first 50 chars, alphanumeric only)
+        short_desc = re.sub(r'[^a-zA-Z0-9_]+', '_', user_input[:50]).strip('_').lower()
+
+        # Create timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+
+        # Create filename
+        filename = f"{short_desc}_{timestamp}.md"
+
+        # Ensure reports directory exists
+        reports_dir = Path("reports")
+        reports_dir.mkdir(exist_ok=True)
+
+        # Full path
+        file_path = reports_dir / filename
+
+        # Save the report
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(f"# Research Report\n\n")
+            f.write(f"**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
+            f.write(f"**Query:** {user_input}\n\n")
+            f.write("---\n\n")
+            f.write(report)
+
+        console.print(f"[green]📁 Report saved to: {file_path}[/green]")
+        return str(file_path)
+
+    async def run(self, user_input: str, save_to_file: bool = True) -> str:
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold cyan]🎯 DEEP RESEARCH SYSTEM - STARTING[/bold cyan]", border_style="cyan"))
         console.print("[bold]═" * 80 + "[/bold]\n")
@@ -80,6 +120,10 @@ class DeepResearch:
         console.print("\n" + "=" * 80 + "\n")
         console.print(Panel("[bold magenta]PHASE 3: REPORT GENERATION[/bold magenta]", border_style="magenta"))
         report = await self.generate_final_report(research_brief, research_notes)
+
+        # Save report to file if requested
+        if save_to_file:
+            self._save_report_to_file(report, user_input)
 
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold green]✨ DEEP RESEARCH COMPLETE[/bold green]", border_style="green"))
