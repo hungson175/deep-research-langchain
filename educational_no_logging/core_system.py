@@ -31,6 +31,7 @@ from utils import (
 # 1. CLARIFIER
 # ===========================
 
+# Pydantic models for structured LLM output
 class ClarifyWithUser(BaseModel):
     need_clarification: bool
     question: str
@@ -40,7 +41,7 @@ class ResearchQuestion(BaseModel):
     research_brief: str
 
 class FlexibleResponse(BaseModel):
-    response: Union[ClarifyWithUser, ResearchQuestion]
+    response: Union[ClarifyWithUser, ResearchQuestion]  # Can return either clarification or brief
 
 
 class ResearchBriefCreator:
@@ -48,7 +49,7 @@ class ResearchBriefCreator:
 
     def __init__(self):
         self.llm = init_chat_model(model="xai:grok-code-fast-1", temperature=0.0)
-        self.structured_llm = self.llm.with_structured_output(FlexibleResponse)
+        self.structured_llm = self.llm.with_structured_output(FlexibleResponse)  # Forces structured response
         self.cache_strategy = CacheStrategyFactory.create_strategy("xai:grok-code-fast-1")
 
         system_msg = self.cache_strategy.prepare_system_message(
@@ -57,6 +58,7 @@ class ResearchBriefCreator:
         self.messages = [system_msg]
 
     def clarify_with_user(self, user_input: str):
+        # Ask LLM if clarification is needed
         msg = self.cache_strategy.prepare_human_message(
             clarify_instructions.format(user_input=user_input),
             add_cache=True
@@ -70,8 +72,9 @@ class ResearchBriefCreator:
             if isinstance(response, ClarifyWithUser):
                 self.messages.append(AIMessage(content=str(response)))
                 if not response.need_clarification:
-                    return response
+                    return response  # No more questions needed
 
+                # Interactive Q&A with user
                 print(f"Q: {response.question}")
                 answer = input("A: ")
                 self.messages.append(
@@ -81,6 +84,7 @@ class ResearchBriefCreator:
                 return response
 
     def write_research_brief(self) -> ResearchQuestion:
+        # Transform conversation into structured research brief
         msg = self.cache_strategy.prepare_human_message(
             transform_to_brief_prompt,
             add_cache=True
@@ -108,9 +112,9 @@ class Researcher:
 
     def __init__(self, max_iterations: int = 3):
         self.model = init_chat_model(model="xai:grok-code-fast-1", max_tokens=64000)
-        self.tools = [think_tool, tavily_search]
+        self.tools = [think_tool, tavily_search]  # Available tools: reflection & web search
         self.model_with_tools = self.model.bind_tools(self.tools)
-        self.max_iterations = max_iterations
+        self.max_iterations = max_iterations  # Limit tool calls to prevent infinite loops
         self.cache_strategy = CacheStrategyFactory.create_strategy("xai:grok-code-fast-1")
 
         system_msg = self.cache_strategy.prepare_system_message(
@@ -120,6 +124,7 @@ class Researcher:
         self.tools_by_name = {tool.name: tool for tool in self.tools}
 
     async def compress_research_findings(self) -> str:
+        """Compress all research into a concise summary for the supervisor."""
         self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)
 
         msg = self.cache_strategy.prepare_human_message(
@@ -141,11 +146,12 @@ class Researcher:
         self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)
         self.messages.append(response)
 
+        # Tool-calling loop: LLM decides which tools to use
         iteration = 0
         while response.tool_calls and iteration < self.max_iterations:
             iteration += 1
 
-            # Execute tools
+            # Execute requested tools (search or think)
             observations = []
             for tool_call in response.tool_calls:
                 tool = self.tools_by_name[tool_call["name"]]
@@ -171,7 +177,7 @@ class Researcher:
 
 @tool
 async def conduct_research(research_topic: str) -> str:
-    """Delegate research to a sub-agent."""
+    """Delegate research to a sub-agent. Each call spawns a new Researcher."""
     researcher = Researcher(max_iterations=3)
     return await researcher.start_research(research_topic)
 
@@ -181,7 +187,7 @@ class Supervisor:
 
     def __init__(self, research_brief: str, max_iterations: int = 6):
         self.research_brief = research_brief
-        self.max_iterations = max_iterations
+        self.max_iterations = max_iterations  # Total iterations for all research
         self.cache_strategy = CacheStrategyFactory.create_strategy("xai:grok-code-fast-1")
 
         system_msg = self.cache_strategy.prepare_system_message(
@@ -204,6 +210,7 @@ class Supervisor:
         self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)
         self.messages.append(response)
 
+        # Supervisor's tool-calling loop
         iteration = 0
         while response.tool_calls and iteration < self.max_iterations:
             iteration += 1
@@ -218,7 +225,7 @@ class Supervisor:
                 msg = self.cache_strategy.prepare_tool_message(result, call["id"], add_cache=False)
                 self.messages.append(msg)
 
-            # Handle conduct_research asynchronously
+            # Handle conduct_research in parallel (up to 3 concurrent)
             if research_calls:
                 results = await asyncio.gather(*[
                     conduct_research.ainvoke(call["args"]) for call in research_calls
@@ -234,7 +241,7 @@ class Supervisor:
             self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)
             self.messages.append(response)
 
-        # Extract research notes from tool messages
+        # Extract compressed research notes from all tool messages
         notes = [msg.content for msg in filter_messages(self.messages, include_types="tool")]
         return {"final_response": response.content, "notes": notes}
 
@@ -263,6 +270,7 @@ class DeepResearch:
         return response.content
 
     def save_report(self, report: str, user_input: str) -> str:
+        # Create descriptive filename from user input
         short_desc = re.sub(r'[^a-zA-Z0-9_]+', '_', user_input[:50]).strip('_').lower()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
         filename = f"{short_desc}_{timestamp}.md"
@@ -280,17 +288,17 @@ class DeepResearch:
         return str(file_path)
 
     async def run(self, user_input: str, save_to_file: bool = True) -> str:
-        # Phase 1: Clarification
+        # Phase 1: Clarification - understand what user wants
         brief_creator = ResearchBriefCreator()
         result = brief_creator.run(user_input)
         research_brief = result.research_brief
 
-        # Phase 2: Supervised Research
+        # Phase 2: Supervised Research - gather information
         supervisor = Supervisor(research_brief=research_brief)
         result = await supervisor.start_supervision()
-        research_notes = result["notes"]
+        research_notes = result["notes"]  # Compressed findings from all researchers
 
-        # Phase 3: Report Generation
+        # Phase 3: Report Generation - create final document
         report = await self.generate_final_report(research_brief, research_notes)
 
         if save_to_file:

@@ -41,6 +41,44 @@ async def conduct_research(research_topic: str) -> str:
     console.print(f"[dim green]└── Sub-researcher completed: {research_topic[:50]}...[/dim green]")
     return result
 
+
+@tool
+async def query_momo_data(query: str) -> str:
+    """
+    Query MoMo business data using specialized MirMir Agent.
+
+    Args:
+        query: Natural language query about MoMo data. Should specify:
+               - Data type (GMV, users, transactions, revenue)
+               - Time range (e.g., "từ 1/1/2025 đến 31/1/2025")
+               - Add "KHÔNG cần chart" to avoid chart generation
+
+    Returns:
+        MoMo business data and insights from MirMir API.
+    """
+    console.print(f"[dim cyan]└── Launching MirMir Agent for: {query[:100]}...[/dim cyan]")
+
+    # Import and initialize
+    from mirmir_research_agent import MirMirResearchAgent
+
+    # Run in executor to handle sync/async
+    import asyncio
+    loop = asyncio.get_event_loop()
+
+    try:
+        # Create agent instance
+        agent = MirMirResearchAgent()
+
+        # Execute query in thread pool
+        result = await loop.run_in_executor(None, agent.query_momo_data, query)
+
+        console.print(f"[dim green]└── MirMir Agent completed[/dim green]")
+        return result
+    except Exception as e:
+        error_msg = f"Error querying MoMo data: {str(e)}"
+        console.print(f"[dim red]└── {error_msg}[/dim red]")
+        return error_msg
+
 class Supervisor:
         
     # System constants
@@ -82,7 +120,7 @@ class Supervisor:
         self.max_research_iterations = max_researcher_iterations
         self.max_concurrent_researchers = max_concurrent_research_units
         model = init_chat_model(model=self.SUPERVISOR_MODEL)
-        self.model_with_tools = model.bind_tools([conduct_research, think_tool])
+        self.model_with_tools = model.bind_tools([conduct_research, query_momo_data, think_tool])
         
     async def start_supervision(self):
         console.print(Panel(f"[bold blue]📋 Starting Supervision[/bold blue]\n\nResearch Brief:\n{self.research_brief[:200]}...", border_style="blue"))
@@ -124,6 +162,11 @@ class Supervisor:
             conduct_search_calls = [
                 tool_call for tool_call in response.tool_calls
                 if tool_call["name"] == "conduct_research"
+            ]
+
+            query_momo_calls = [
+                tool_call for tool_call in response.tool_calls
+                if tool_call["name"] == "query_momo_data"
             ]
 
             # Handle think_tool sync
@@ -180,7 +223,50 @@ class Supervisor:
                     )
                     research_tool_messages.append(tool_msg)
                 self.messages.extend(research_tool_messages)
-            
+
+            # Handle query_momo_data async
+            if query_momo_calls:
+                console.print(f"[cyan]📊 Querying {len(query_momo_calls)} MoMo data request(s)...[/cyan]")
+
+                # Create a table to show MoMo queries
+                table = Table(title="MoMo Data Queries", show_header=True, header_style="bold cyan")
+                table.add_column("#", style="dim", width=3)
+                table.add_column("Query", style="white")
+
+                for i, tool_call in enumerate(query_momo_calls, 1):
+                    query_text = tool_call["args"]["query"][:100] + "..."
+                    table.add_row(str(i), query_text)
+
+                console.print(table)
+
+                coroutines = [
+                    query_momo_data.ainvoke(tool_call["args"])
+                    for tool_call in query_momo_calls
+                ]
+
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console,
+                ) as progress:
+                    task = progress.add_task(f"[cyan]MirMir Agent processing...", total=None)
+                    momo_results = await asyncio.gather(*coroutines)
+                    progress.update(task, completed=True)
+
+                console.print(f"[green]✅ All {len(query_momo_calls)} MoMo data queries completed[/green]")
+
+                momo_tool_messages = []
+                for i, (result, tool_call) in enumerate(zip(momo_results, query_momo_calls)):
+                    # Cache the last MoMo query result
+                    is_last = (i == len(momo_results) - 1)
+                    tool_msg = self.cache_strategy.prepare_tool_message(
+                        result,
+                        tool_call["id"],
+                        add_cache=is_last  # Cache last MoMo result
+                    )
+                    momo_tool_messages.append(tool_msg)
+                self.messages.extend(momo_tool_messages)
+
             console.print("[dim]Supervisor analyzing results and planning next steps...[/dim]")
             # Invoke directly - last tool message already has cache if needed
             response = await self.model_with_tools.ainvoke(self.messages)
