@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from researcher import Researcher
-from utils import show_prompt, get_notes_from_tool_calls, format_messages
+from utils import show_prompt, get_notes_from_tool_calls, format_messages, console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 from prompts import lead_researcher_prompt
 from cache_strategy import CacheStrategyFactory
 
@@ -13,7 +16,8 @@ from langchain_core.tools import tool
 from utils import get_today_str, think_tool
 from langchain.chat_models import init_chat_model
 
-show_prompt(lead_researcher_prompt, "Lead Researcher Prompt")
+# Uncomment to show the prompt during development
+# show_prompt(lead_researcher_prompt, "Lead Researcher Prompt")
 # Notes: change tools names: 
 # 1. **ConductResearch**: Delegate research tasks to specialized sub-agents                                                                                                                                         │
 # 2. **ResearchComplete**: Indicate that research is complete  
@@ -30,9 +34,12 @@ async def conduct_research(research_topic: str) -> str:
     Returns:
         The research findings.
     """
+    console.print(f"[dim cyan]└── Launching sub-researcher for: {research_topic[:100]}...[/dim cyan]")
     # Each sub-agent gets 3 iterations to research their specific topic
     researcher = Researcher(max_tool_call_iterations=3)
-    return await researcher.start_research(research_brief=research_topic)
+    result = await researcher.start_research(research_brief=research_topic)
+    console.print(f"[dim green]└── Sub-researcher completed: {research_topic[:50]}...[/dim green]")
+    return result
 
 class Supervisor:
         
@@ -51,8 +58,14 @@ class Supervisor:
                  research_brief: str,
                  max_researcher_iterations: int = __max_researcher_iterations,
                  max_concurrent_research_units: int = __max_concurrent_researchers):
+        console.print(Panel("[bold yellow]🎯 Initializing Research Supervisor[/bold yellow]", border_style="yellow"))
+
         # Initialize cache strategy based on model
         self.cache_strategy = CacheStrategyFactory.create_strategy(self.SUPERVISOR_MODEL)
+        console.print(f"[dim]Using model: {self.SUPERVISOR_MODEL}[/dim]")
+        console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
+        console.print(f"[dim]Max iterations: {max_researcher_iterations}[/dim]")
+        console.print(f"[dim]Max concurrent researchers: {max_concurrent_research_units}[/dim]")
 
         # Create initial system message with caching if supported
         system_msg = self.cache_strategy.prepare_system_message(
@@ -72,6 +85,8 @@ class Supervisor:
         self.model_with_tools = model.bind_tools([conduct_research, think_tool])
         
     async def start_supervision(self):
+        console.print(Panel(f"[bold blue]📋 Starting Supervision[/bold blue]\n\nResearch Brief:\n{self.research_brief[:200]}...", border_style="blue"))
+
         # Create and append human message with cache strategy
         research_msg = self.cache_strategy.prepare_human_message(
             self.research_brief,
@@ -79,6 +94,7 @@ class Supervisor:
         )
         self.messages.append(research_msg)
 
+        console.print("[dim]Supervisor analyzing research brief and planning approach...[/dim]")
         # Invoke directly - messages already have cache from prepare_human_message
         response = await self.model_with_tools.ainvoke(self.messages)
 
@@ -87,28 +103,32 @@ class Supervisor:
         self.messages.append(response)
         
         researcher_iteration = 0
-        
+
         # Only handle tool calls and not exceed the maximum number of iterations
         while response.tool_calls:
             # Check if we've hit the iteration limit BEFORE processing
             if researcher_iteration >= self.max_research_iterations:
+                console.print(f"[yellow]⚠️ Reached maximum iterations ({self.max_research_iterations}). Finalizing research...[/yellow]")
                 # Remove the last AI message with unfulfilled tool calls
                 # to avoid OpenAI API error about missing tool responses
                 self.messages.pop()
                 break
 
+            console.print(f"\n[bold cyan]🔄 Iteration {researcher_iteration + 1}/{self.max_research_iterations}[/bold cyan]")
+
             think_tool_calls = [
-                tool_call for tool_call in response.tool_calls 
+                tool_call for tool_call in response.tool_calls
                 if tool_call["name"] == "think_tool"
             ]
-            
+
             conduct_search_calls = [
-                tool_call for tool_call in response.tool_calls 
+                tool_call for tool_call in response.tool_calls
                 if tool_call["name"] == "conduct_research"
             ]
-            
+
             # Handle think_tool sync
             for tool_call in think_tool_calls:
+                console.print(f"[magenta]💭 Supervisor thinking: {tool_call['args']['reflection'][:150]}...[/magenta]")
                 observation = think_tool.invoke(tool_call["args"])
                 # Use cache strategy for tool messages
                 tool_msg = self.cache_strategy.prepare_tool_message(
@@ -120,12 +140,35 @@ class Supervisor:
                 
             # Handle conduct_research async
             if conduct_search_calls:
+                console.print(f"[cyan]🚀 Launching {len(conduct_search_calls)} parallel research task(s)...[/cyan]")
+
+                # Create a table to show research tasks
+                table = Table(title="Research Tasks", show_header=True, header_style="bold cyan")
+                table.add_column("#", style="dim", width=3)
+                table.add_column("Topic", style="white")
+
+                for i, tool_call in enumerate(conduct_search_calls, 1):
+                    topic = tool_call["args"]["research_topic"][:100] + "..."
+                    table.add_row(str(i), topic)
+
+                console.print(table)
+
                 coroutines = [
                     conduct_research.ainvoke(tool_call["args"])
                     for tool_call in conduct_search_calls
                 ]
-                tool_results = await asyncio.gather(*coroutines)
-                
+
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console,
+                ) as progress:
+                    task = progress.add_task(f"[cyan]Researchers working...", total=None)
+                    tool_results = await asyncio.gather(*coroutines)
+                    progress.update(task, completed=True)
+
+                console.print(f"[green]✅ All {len(conduct_search_calls)} research task(s) completed[/green]")
+
                 research_tool_messages = []
                 for i, (result, tool_call) in enumerate(zip(tool_results, conduct_search_calls)):
                     # Cache the last research tool message for better performance
@@ -138,6 +181,7 @@ class Supervisor:
                     research_tool_messages.append(tool_msg)
                 self.messages.extend(research_tool_messages)
             
+            console.print("[dim]Supervisor analyzing results and planning next steps...[/dim]")
             # Invoke directly - last tool message already has cache if needed
             response = await self.model_with_tools.ainvoke(self.messages)
 
@@ -146,9 +190,12 @@ class Supervisor:
             self.messages.append(response)
             researcher_iteration += 1
         self.notes = get_notes_from_tool_calls(self.messages)
+
+        console.print(Panel(f"[bold green]✨ Supervision Complete[/bold green]\n\nCollected {len(self.notes)} research notes", border_style="green"))
+
         return {
             "final_response": response.content,
-            "notes": self.notes 
+            "notes": self.notes
         }
 
 BIG_BRIEF = """
@@ -161,14 +208,26 @@ sourcing information from official coffee shop websites, reputable review platfo
 or Google Reviews, and local tourism sites in Vietnamese or English.
 """
 async def main():
+    console.print("[bold]═" * 80 + "[/bold]")
+    console.print(Panel("[bold yellow]Research Supervisor - Demo Mode[/bold yellow]", border_style="yellow"))
+    console.print("[bold]═" * 80 + "[/bold]")
+
     supervisor = Supervisor(research_brief=BIG_BRIEF)
     result = await supervisor.start_supervision()
-    print("Final Response:")
-    print(result["final_response"])
-    print("Notes:")
-    print(result["notes"])
-    
-    format_messages(supervisor.messages)
+
+    console.print("\n[bold]═" * 80 + "[/bold]")
+    console.print(Panel(f"[bold green]📝 Final Response[/bold green]\n\n{result['final_response']}", border_style="green"))
+
+    console.print("\n[bold]═" * 80 + "[/bold]")
+    console.print(Panel(f"[bold cyan]📚 Research Notes ({len(result['notes'])} total)[/bold cyan]", border_style="cyan"))
+    for i, note in enumerate(result['notes'], 1):
+        console.print(f"\n[bold]Note {i}:[/bold]")
+        console.print(Panel(note[:500] + "..." if len(note) > 500 else note, border_style="dim"))
+
+    # Uncomment to see full message history
+    # console.print("\n[bold]═" * 80 + "[/bold]")
+    # console.print("[bold]Message History:[/bold]")
+    # format_messages(supervisor.messages)
         
 if __name__ == "__main__":
     asyncio.run(main())

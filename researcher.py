@@ -3,11 +3,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain.chat_models import init_chat_model
-from utils import show_prompt, get_today_str, tavily_search, think_tool
+from utils import show_prompt, get_today_str, tavily_search, think_tool, console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from prompts import compress_research_combined_prompt, research_agent_prompt
 from cache_strategy import CacheStrategyFactory
 
-show_prompt(research_agent_prompt, "Research Agent Instructions")
+# Uncomment to show the prompt during development
+# show_prompt(research_agent_prompt, "Research Agent Instructions")
 class Researcher:
     __RESEARCHER_MODEL = "xai:grok-code-fast-1"
     # __RESEARCHER_MODEL = "openai:gpt-4.1"
@@ -15,6 +18,8 @@ class Researcher:
     # __COMPRESSION_MODEL = "openai:gpt-4.1"  # Using GPT-4.1 for compression as in original
 
     def __init__(self, max_tool_call_iterations: int = 3):
+        console.print(Panel("[bold green]🔍 Initializing Researcher Agent[/bold green]", border_style="green"))
+
         self.model = init_chat_model(model=self.__RESEARCHER_MODEL, max_tokens=64000)
         self.tools = [think_tool, tavily_search]
         self.model_with_tools = self.model.bind_tools(self.tools)
@@ -22,6 +27,9 @@ class Researcher:
 
         # Initialize cache strategy based on model
         self.cache_strategy = CacheStrategyFactory.create_strategy(self.__RESEARCHER_MODEL)
+        console.print(f"[dim]Using model: {self.__RESEARCHER_MODEL}[/dim]")
+        console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
+        console.print(f"[dim]Max iterations: {max_tool_call_iterations}[/dim]")
 
         # Create initial system message with caching if supported
         system_msg = self.cache_strategy.prepare_system_message(
@@ -41,6 +49,8 @@ class Researcher:
         Uses a single combined prompt that merges system and human messages
         to maintain conversation context and leverage cached prompts.
         """
+        console.print("[yellow]📝 Compressing research findings...[/yellow]")
+
         # IMPORTANT: Clean up any lingering cache_control from messages first
         # This handles the case where we hit max iterations and broke early
         self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)
@@ -67,8 +77,11 @@ class Researcher:
         self.compressed_research = str(response.content)
         self.messages.append(response)
 
+        console.print("[green]✅ Research compression complete[/green]")
         return self.compressed_research
     async def start_research(self, research_brief: str):
+        console.print(Panel(f"[bold green]🔎 Starting Research[/bold green]\n\nBrief: {research_brief[:150]}...", border_style="green"))
+
         # Create and append human message with cache strategy
         research_msg = self.cache_strategy.prepare_human_message(
             research_brief,
@@ -76,6 +89,7 @@ class Researcher:
         )
         self.messages.append(research_msg)
 
+        console.print("[dim]Researcher analyzing brief and planning approach...[/dim]")
         # Invoke directly - messages already have cache from prepare_human_message
         response = await self.model_with_tools.ainvoke(self.messages)
 
@@ -88,16 +102,40 @@ class Researcher:
         while response.tool_calls:
             # Check if we've hit the iteration limit BEFORE processing
             if tool_call_iterations >= self.max_tool_call_iterations:
+                console.print(f"[yellow]⚠️ Reached maximum iterations ({self.max_tool_call_iterations}). Finalizing research...[/yellow]")
                 # Remove the last AI message with unfulfilled tool calls
                 # to avoid OpenAI API error about missing tool responses
                 self.messages.pop()
                 break
 
             tool_call_iterations += 1
+            console.print(f"\n[cyan]🔄 Research Iteration {tool_call_iterations}/{self.max_tool_call_iterations}[/cyan]")
+
             observations = []
             for tool_call in response.tool_calls:
                 tool = self.tools_by_name[tool_call["name"]]
-                observations.append(await tool.ainvoke(tool_call["args"]))
+                tool_name = tool_call["name"]
+
+                if tool_name == "think_tool":
+                    console.print(f"[magenta]💭 Thinking: {tool_call['args']['reflection'][:100]}...[/magenta]")
+                elif tool_name == "tavily_search":
+                    console.print(f"[blue]🔍 Searching: \"{tool_call['args']['query']}\"[/blue]")
+
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    console=console,
+                    transient=True,
+                ) as progress:
+                    task = progress.add_task(f"[cyan]Executing {tool_name}...", total=None)
+                    result = await tool.ainvoke(tool_call["args"])
+                    progress.update(task, completed=True)
+                    observations.append(result)
+
+                if tool_name == "tavily_search":
+                    # Show brief summary of search results
+                    result_preview = result[:200] + "..." if len(result) > 200 else result
+                    console.print(f"[dim green]✅ Found relevant information[/dim green]")
 
             # Create tool messages with cache strategy
             tool_outputs = []
@@ -113,6 +151,7 @@ class Researcher:
 
             self.messages.extend(tool_outputs)
 
+            console.print("[dim]Analyzing findings and planning next steps...[/dim]")
             # Invoke directly - last tool message already has cache
             response = await self.model_with_tools.ainvoke(self.messages)
 
@@ -122,6 +161,7 @@ class Researcher:
 
         # Compress findings
         self.compressed_research = await self.compress_research_findings()
+        console.print(Panel("[bold green]✨ Research Complete[/bold green]", border_style="green"))
         return self.compressed_research
 
 
@@ -134,12 +174,17 @@ direct sources like official shop websites, Google Maps, and reputable review pl
 as TripAdvisor or local Vietnamese review sites for authentic insights.
 """
 async def main():
+    console.print("[bold]═" * 80 + "[/bold]")
+    console.print(Panel("[bold green]Researcher Agent - Demo Mode[/bold green]", border_style="green"))
+    console.print("[bold]═" * 80 + "[/bold]")
+
     # Test the researcher
     researcher = Researcher(max_tool_call_iterations=3)
     research_brief = RESEARCH_BRIEF
     result = await researcher.start_research(research_brief)
-    print("Compressed Research Results:")
-    print("-" * 80)
-    print(result)  
+
+    console.print("\n[bold]═" * 80 + "[/bold]")
+    console.print(Panel(f"[bold cyan]📋 Compressed Research Results[/bold cyan]\n\n{result}", border_style="cyan"))
+    console.print("[bold]═" * 80 + "[/bold]")  
 if __name__ == "__main__":
     asyncio.run(main())
