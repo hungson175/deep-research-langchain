@@ -40,7 +40,7 @@ python -m py_compile *.py
 
 ## Architecture Overview
 
-This is a multi-agent deep research system built with LangChain (without LangGraph). The system follows a three-phase architecture:
+This is a multi-agent deep research system built with LangChain (without LangGraph). The system follows a four-phase architecture:
 
 ### Phase 1: Clarification (clarifier.py)
 - `ResearchBriefCreator` class interacts with users to clarify research intent
@@ -59,6 +59,14 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 - Generates comprehensive final report using Claude Sonnet model
 - Automatically saves reports to `./reports/` directory with timestamp-based filenames
 
+### Phase 4: Insight Page Generation (insight_generator.py) - NEW
+- `InsightGenerator` class creates interactive HTML insight pages from research notes
+- Generates concise 2-4 page visual summaries highlighting key findings
+- Uses Claude Code SDK to generate interactive HTML with charts/tabs
+- Focuses on actionable insights, not full content (helps users decide if they want to read the full report)
+- Requires `claude-code-sdk` package (optional dependency)
+- Automatically saves to `./reports/htmls/` directory with timestamp-based filenames
+
 ## Key Components
 
 - **Cache Strategy**: `cache_strategy.py` implements caching for Anthropic models to optimize token usage
@@ -75,6 +83,12 @@ This is a multi-agent deep research system built with LangChain (without LangGra
   - Message formatting utilities
 - **Reports Directory**: `./reports/` stores saved research reports (gitignored)
   - Auto-generated filenames: `{description}_{YYYYMMDD_HHMM}.md`
+  - HTML insight pages: `./reports/htmls/insights_{description}_{YYYYMMDD_HHMM}.html`
+- **Insight Generator**: `insight_generator.py` creates interactive HTML summaries (NEW)
+  - Extracts key insights from research notes (not final report)
+  - Generates 2-4 page visual summaries with charts/tabs
+  - Uses Claude Code SDK for HTML generation
+  - Optional feature - gracefully disabled if SDK not installed
 - **Educational Version**: `./educational_no_logging/` contains consolidated clean code for learning
   - `core_system.py` - All classes in one file (~310 lines)
   - `prompts.py` - Prompts only (~78 lines)
@@ -85,6 +99,7 @@ This is a multi-agent deep research system built with LangChain (without LangGra
   - Supervisor: `xai:grok-code-fast-1`
   - Researcher: `xai:grok-code-fast-1`
   - Final Report Writer: `anthropic:claude-sonnet-4-20250514`
+  - Insight Page Generator: Claude via `claude-code-sdk` (interactive HTML generation)
 
 ## API Keys Required
 
@@ -103,3 +118,4 @@ The system requires the following API keys in `.env`:
 - Reports are automatically saved with descriptive filenames based on user input
 - The educational version in `educational_no_logging/` has identical logic but cleaner presentation
 - `mirmir_research_agent.py` exists but is separate from the main research pipeline
+- **Insight generation** uses `permission_mode='acceptAll'` to allow Claude full access to all tools (Read, Write, Bash, etc.) for creating interactive HTML pages

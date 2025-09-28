@@ -1,22 +1,56 @@
-# First prompt
-look at '/Users/sonph36/dev/deep_research_mrW/deep_research_langchain/sample_codes/auto-explore': it's MirMir Agent - read '/Users/sonph36/dev/deep_research_mrW/deep_research_langchain/sample_codes/auto-explore/CLAUDE.md' to 
-understand the project
+# COMPLETED ✅ (Updated with SDK corrections)
 
-That agent can retrieve data from MoMo data store using nature language.
+Successfully added SPA (insight page) generation to the deep research system.
 
+## Latest Update (SDK Configuration):
+- ✅ Changed `permission_mode` from `'acceptEdits'` to `'acceptAll'` for full tool access
+- ✅ Removed `allowed_tools` restriction - Claude now has access to ALL tools (Read, Write, Bash, Glob, etc.)
+- ✅ Increased `max_turns` from 5 to 10 for more complex HTML generation
+- ✅ Updated CLAUDE.md with SDK permission notes
 
-The main code is in: /Users/sonph36/dev/deep_research_mrW/deep_research_langchain/sample_codes/auto-explore/mirmir_agent - READ THIS DIRECTORY VERY CAREFUL to know how to implement it
-Use the System Prompt & Tool description EXACTLY how it is , because those prompts cost millions of USD to make.
+## What was implemented:
 
+1. **New file: `insight_generator.py`**
+   - `InsightGenerator` class creates interactive HTML insight pages
+   - Generates from research notes (not final report)
+   - Uses Claude Code SDK for HTML generation with FULL tool permissions
+   - Concise 2-4 page visual summaries with charts/tabs
 
-I want to implement a tool that supervior can use to retrieve MoMo data using that agent(in /Users/sonph36/dev/deep_research_mrW/deep_research_langchain/supervisor.py) 
+2. **Updated: `deep_research_system.py`**
+   - Added Phase 4: Insight Page Generation
+   - New parameter `generate_insights` (default True)
+   - Automatically generates insight page after report
+   - Gracefully handles missing SDK dependency
 
-What solution do you suggest - write it out here , so I can review it ?
+3. **Updated: `CLAUDE.md`**
+   - Documented new Phase 4 architecture
+   - Added insight generator to key components
+   - Updated models used section
 
+4. **New file: `example_insight_generation.py`**
+   - Demo showing how to use insight generation
+   - Sample research notes included
 
----
-# Second prompt
+## Key differences from reference implementation:
+- ✅ Uses research notes instead of final report
+- ✅ Focuses on insights, not full content (2-4 pages)
+- ✅ Integrated into main pipeline as Phase 4
+- ✅ Optional feature (gracefully disabled if SDK missing)
 
-The description of tool query_momo_data() must be MUCH more details, and input must 
+## How to use:
+```python
+# Automatic (in main pipeline)
+system = DeepResearch()
+report = await system.run(user_input)  # Insight page auto-generated
 
- "If referenced files are not found in expected locations, search for them using Glob or Grep tools." -> add LS tool
+# Disable if needed
+report = await system.run(user_input, generate_insights=False)
+
+# Standalone usage
+from insight_generator import generate_insight_from_notes
+success, path = await generate_insight_from_notes(
+    research_notes=notes,
+    research_brief=brief,
+    output_filename="my_insights"
+)
+``` 

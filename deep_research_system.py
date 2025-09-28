@@ -19,7 +19,7 @@ from rich.markdown import Markdown
 from prompts import final_report_generation_prompt
 from cache_strategy import CacheStrategyFactory
 from config import WRITER_MODEL
-USER_INPUT = "So sánh hiệu quả hiệu quả business của MoMo với cách đối thủ mạnh nhất ở Việt Nam, và đưa ra giải pháp để phát triển, dựa trên bài học từ chính các đối thủ đó, và các công ty thành công khác ở Trung Quốc"
+USER_INPUT = "So sánh hiệu quả hiệu quả business của MoMo với cách đối thủ mạnh nhất ở Việt Nam: Zalo Pay, VNPay , và đưa ra giải pháp để phát triển, dựa trên bài học từ chính các đối thủ đó, và các công ty thành công khác ở Trung Quốc"
 
 class DeepResearch:
 
@@ -97,7 +97,7 @@ class DeepResearch:
         console.print(f"[green]📁 Report saved to: {file_path}[/green]")
         return str(file_path)
 
-    async def run(self, user_input: str, save_to_file: bool = True) -> str:
+    async def run(self, user_input: str, save_to_file: bool = True, generate_insights: bool = True) -> str:
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold cyan]🎯 DEEP RESEARCH SYSTEM - STARTING[/bold cyan]", border_style="cyan"))
         console.print("[bold]═" * 80 + "[/bold]\n")
@@ -124,11 +124,44 @@ class DeepResearch:
         if save_to_file:
             self._save_report_to_file(report, user_input)
 
+        # Phase 4: Generate insight page
+        if generate_insights:
+            console.print("\n" + "=" * 80 + "\n")
+            console.print(Panel("[bold cyan]PHASE 4: INSIGHT PAGE GENERATION[/bold cyan]", border_style="cyan"))
+            await self._generate_insight_page(research_notes, research_brief, user_input)
+
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold green]✨ DEEP RESEARCH COMPLETE[/bold green]", border_style="green"))
         console.print("[bold]═" * 80 + "[/bold]\n")
 
         return report
+
+    async def _generate_insight_page(self, research_notes: list, research_brief: str, user_input: str):
+        """Generate interactive HTML insight page from research notes."""
+        try:
+            from insight_generator import generate_insight_from_notes
+
+            short_desc = re.sub(r'[^a-zA-Z0-9_]+', '_', user_input[:50]).strip('_').lower()
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+            filename = f"insights_{short_desc}_{timestamp}"
+
+            success, output_path = await generate_insight_from_notes(
+                research_notes=research_notes,
+                research_brief=research_brief,
+                output_filename=filename,
+                title=user_input[:100]
+            )
+
+            if success:
+                console.print(f"[green]🎨 Insight page saved to: {output_path}[/green]")
+            else:
+                console.print(f"[yellow]⚠️ Insight page generation encountered issues[/yellow]")
+
+        except ImportError:
+            console.print("[yellow]⚠️ Insight generation unavailable: claude-code-sdk not installed[/yellow]")
+            console.print("[dim]Install with: pip install claude-code-sdk[/dim]")
+        except Exception as e:
+            console.print(f"[red]❌ Error generating insight page: {e}[/red]")
 
 async def main():
     console.print("[bold]█" * 80 + "[/bold]")
