@@ -10,6 +10,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, get_buffer_string
 from typing import Union
 from cache_strategy import CacheStrategyFactory, MessageCacheStrategy
+from config import CLARIFIER_MODEL
 
 
 class ClarifyWithUser(BaseModel):
@@ -36,8 +37,7 @@ class FlexibleResponse(BaseModel):
     response: Union[ClarifyWithUser, ResearchQuestion]
     
 class ResearchBriefCreator:
-    
-    CLARIFIER_MODEL="xai:grok-code-fast-1"
+
     SYSTEM_PROMPT = """
     You are a research assistant that is helping the user to clarify their request for a research report then write a research brief.
     Today's date is {date}.
@@ -45,13 +45,13 @@ class ResearchBriefCreator:
     def __init__(self):
         console.print(Panel("[bold cyan]🎯 Initializing Research Brief Creator[/bold cyan]", border_style="cyan"))
 
-        self.llm = init_chat_model(model=self.CLARIFIER_MODEL, temperature=0.0)
+        self.llm = init_chat_model(model=CLARIFIER_MODEL, temperature=0.0)
         # Single structured output model that can handle both response types
         self.structured_output_model = self.llm.with_structured_output(FlexibleResponse)
 
         # Initialize cache strategy based on model
-        self.cache_strategy = CacheStrategyFactory.create_strategy(self.CLARIFIER_MODEL)
-        console.print(f"[dim]Using model: {self.CLARIFIER_MODEL}[/dim]")
+        self.cache_strategy = CacheStrategyFactory.create_strategy(CLARIFIER_MODEL)
+        console.print(f"[dim]Using model: {CLARIFIER_MODEL}[/dim]")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
 
         # Create initial system message with caching if supported
@@ -74,6 +74,12 @@ class ResearchBriefCreator:
             console.print("[dim]Invoking LLM for clarification...[/dim]")
             # Invoke directly - messages already have cache from prepare_human_message
             flexible_response = self.structured_output_model.invoke(self.messages)
+
+            # DEBUG: Log the exact response
+            console.print(f"[yellow]DEBUG - flexible_response type: {type(flexible_response)}[/yellow]")
+            console.print(f"[yellow]DEBUG - flexible_response: {flexible_response}[/yellow]")
+            console.print(f"[yellow]DEBUG - flexible_response.response type: {type(flexible_response.response)}[/yellow]")
+            console.print(f"[yellow]DEBUG - flexible_response.response: {flexible_response.response}[/yellow]")
 
             # Cleanup messages after invoke
             self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)

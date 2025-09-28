@@ -18,6 +18,7 @@ from langchain_core.tools import tool, InjectedToolArg
 from tavily import TavilyClient
 
 from prompts import summarize_webpage_prompt
+from config import SUMMARIZATION_MODEL
 
 # ===== UTILITY FUNCTIONS =====
 
@@ -39,7 +40,6 @@ def get_current_dir() -> Path:
         return Path.cwd()
 
 # ===== CONFIGURATION =====
-SUMMARIZATION_MODEL = "xai:grok-code-fast-1"
 summarization_model = init_chat_model(model=SUMMARIZATION_MODEL)
 tavily_client = TavilyClient()
 

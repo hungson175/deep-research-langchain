@@ -10,6 +10,9 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from prompts import lead_researcher_prompt
 from cache_strategy import CacheStrategyFactory
+from config import (SUPERVISOR_MODEL, MIRMIR_API_SERVER_BASE_URL, MIRMIR_TIMEOUT_SECONDS,
+                    RESEARCHER_MAX_TOOL_CALL_ITERATIONS, SUPERVISOR_MAX_RESEARCHER_ITERATIONS,
+                    SUPERVISOR_MAX_CONCURRENT_RESEARCHERS)
 
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool
@@ -35,8 +38,7 @@ async def conduct_research(research_topic: str) -> str:
         The research findings.
     """
     console.print(f"[dim cyan]└── Launching sub-researcher for: {research_topic[:100]}...[/dim cyan]")
-    # Each sub-agent gets 3 iterations to research their specific topic
-    researcher = Researcher(max_tool_call_iterations=3)
+    researcher = Researcher(max_tool_call_iterations=RESEARCHER_MAX_TOOL_CALL_ITERATIONS)
     result = await researcher.start_research(research_brief=research_topic)
     console.print(f"[dim green]└── Sub-researcher completed: {research_topic[:50]}...[/dim green]")
     return result
@@ -45,62 +47,85 @@ async def conduct_research(research_topic: str) -> str:
 @tool
 async def query_momo_data(query: str) -> str:
     """
-    Query MoMo business data using specialized MirMir Agent.
+    Query MoMo's internal business data: GMV, transactions, users, revenue, engagement metrics
+    across 43+ domains (payments, financial services, commerce, analytics).
+
+    USE FOR: MoMo operational metrics and business data
+    DON'T USE FOR: Public info, real-time data, technical architecture, competitor research
+
+    Examples:
+    - "tình hình sản phẩm Moni trong năm 2025 ntn?"
+    - "GMV của MoMo từ 1/1/2025 đến 31/1/2025"
+
+    Note: Takes 1-4 minutes - so if possible, use it ALONE , not mixed with web-search tool. Ask naturally in Vietnamese or English.
 
     Args:
-        query: Natural language query about MoMo data. Should specify:
-               - Data type (GMV, users, transactions, revenue)
-               - Time range (e.g., "từ 1/1/2025 đến 31/1/2025")
-               - Add "KHÔNG cần chart" to avoid chart generation
+        query: Your question about MoMo data
 
     Returns:
-        MoMo business data and insights from MirMir API.
+        Business data from MoMo's data warehouse
     """
-    console.print(f"[dim cyan]└── Launching MirMir Agent for: {query[:100]}...[/dim cyan]")
+    import requests
 
-    # Import and initialize
-    from mirmir_research_agent import MirMirResearchAgent
-
-    # Run in executor to handle sync/async
-    import asyncio
-    loop = asyncio.get_event_loop()
+    console.print(f"[dim cyan]└── Querying MoMo data: {query[:100]}...[/dim cyan]")
 
     try:
-        # Create agent instance
-        agent = MirMirResearchAgent()
+        api_url = f"{MIRMIR_API_SERVER_BASE_URL}/auto_query"
+        payload = {
+            "query": query,
+            "execute": True,
+            "verbose": True
+        }
 
-        # Execute query in thread pool
-        result = await loop.run_in_executor(None, agent.query_momo_data, query)
+        response = requests.post(api_url, json=payload, timeout=MIRMIR_TIMEOUT_SECONDS)
+        response.raise_for_status()
 
-        console.print(f"[dim green]└── MirMir Agent completed[/dim green]")
-        return result
+        result = response.json()
+
+        if result["success"]:
+            formatted_response = f"MoMo Data Query Results ({result['queries_with_answers']}/{result['total_queries']} answered):\n\n"
+
+            for i, sq in enumerate(result['sub_queries'], 1):
+                formatted_response += f"{i}. Domain: {sq['domain_name']}\n"
+                formatted_response += f"   Question: {sq['question']}\n"
+                if sq['answer']:
+                    formatted_response += f"   Answer: {sq['answer']}\n"
+                else:
+                    formatted_response += f"   Answer: (No answer received)\n"
+                formatted_response += "\n"
+
+            console.print(f"[dim green]└── MoMo data query completed: {result['queries_with_answers']} answers retrieved[/dim green]")
+            return formatted_response
+        else:
+            error_msg = f"MirMir API Error: {result.get('error', 'Unknown error')}"
+            console.print(f"[dim red]└── MoMo data query failed: {error_msg}[/dim red]")
+            return error_msg
+
+    except requests.exceptions.ConnectionError:
+        error_msg = "Cannot connect to MirMir API at localhost:8001. Please ensure the API server is running: uv run python api_server.py"
+        console.print(f"[dim red]└── {error_msg}[/dim red]")
+        return error_msg
+    except requests.exceptions.Timeout:
+        error_msg = "MirMir API request timed out after 5 minutes. Query may be too complex."
+        console.print(f"[dim red]└── {error_msg}[/dim red]")
+        return error_msg
     except Exception as e:
-        error_msg = f"Error querying MoMo data: {str(e)}"
+        error_msg = f"Unexpected error querying MoMo data: {str(e)}"
         console.print(f"[dim red]└── {error_msg}[/dim red]")
         return error_msg
 
-class Supervisor:
-        
-    # System constants
-    # Maximum number of tool call iterations for individual researcher agents
-    # This prevents infinite loops and controls research depth per topic
-    __max_researcher_iterations = 6 # Calls to think_tool + conduct_research
 
-    # Maximum number of concurrent research agents the supervisor can launch
-    # This is passed to the lead_researcher_prompt to limit parallel research tasks
-    __max_concurrent_researchers = 3
-    
-    # SUPERVISOR_MODEL = "anthropic:claude-sonnet-4-20250514"
-    SUPERVISOR_MODEL = "xai:grok-code-fast-1"
+class Supervisor:
+
     def __init__(self,
                  research_brief: str,
-                 max_researcher_iterations: int = __max_researcher_iterations,
-                 max_concurrent_research_units: int = __max_concurrent_researchers):
+                 max_researcher_iterations: int = SUPERVISOR_MAX_RESEARCHER_ITERATIONS,
+                 max_concurrent_research_units: int = SUPERVISOR_MAX_CONCURRENT_RESEARCHERS):
         console.print(Panel("[bold yellow]🎯 Initializing Research Supervisor[/bold yellow]", border_style="yellow"))
 
         # Initialize cache strategy based on model
-        self.cache_strategy = CacheStrategyFactory.create_strategy(self.SUPERVISOR_MODEL)
-        console.print(f"[dim]Using model: {self.SUPERVISOR_MODEL}[/dim]")
+        self.cache_strategy = CacheStrategyFactory.create_strategy(SUPERVISOR_MODEL)
+        console.print(f"[dim]Using model: {SUPERVISOR_MODEL}[/dim]")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
         console.print(f"[dim]Max iterations: {max_researcher_iterations}[/dim]")
         console.print(f"[dim]Max concurrent researchers: {max_concurrent_research_units}[/dim]")
@@ -119,7 +144,7 @@ class Supervisor:
         self.notes = []
         self.max_research_iterations = max_researcher_iterations
         self.max_concurrent_researchers = max_concurrent_research_units
-        model = init_chat_model(model=self.SUPERVISOR_MODEL)
+        model = init_chat_model(model=SUPERVISOR_MODEL)
         self.model_with_tools = model.bind_tools([conduct_research, query_momo_data, think_tool])
         
     async def start_supervision(self):

@@ -18,18 +18,17 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.markdown import Markdown
 from prompts import final_report_generation_prompt
 from cache_strategy import CacheStrategyFactory
-
+from config import WRITER_MODEL
+USER_INPUT = "So sánh hiệu quả hiệu quả business của MoMo với cách đối thủ mạnh nhất ở Việt Nam, và đưa ra giải pháp để phát triển, dựa trên bài học từ chính các đối thủ đó, và các công ty thành công khác ở Trung Quốc"
 
 class DeepResearch:
 
-    WRITER_MODEL = "anthropic:claude-sonnet-4-20250514"
-
     def __init__(self):
         console.print(Panel("[bold magenta]🚀 Initializing Deep Research System[/bold magenta]", border_style="magenta"))
-        console.print(f"[dim]Writer model: {self.WRITER_MODEL}[/dim]")
+        console.print(f"[dim]Writer model: {WRITER_MODEL}[/dim]")
 
-        self.writer_model = init_chat_model(model=self.WRITER_MODEL, max_tokens=32000)
-        self.cache_strategy = CacheStrategyFactory.create_strategy(self.WRITER_MODEL)
+        self.writer_model = init_chat_model(model=WRITER_MODEL, max_tokens=32000)
+        self.cache_strategy = CacheStrategyFactory.create_strategy(WRITER_MODEL)
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
 
     async def generate_final_report(self, research_brief: str, research_notes: list) -> str:
@@ -139,7 +138,7 @@ async def main():
     system = DeepResearch()
 
     # user_input = "Compare Deep Research products from OpenAI vs Google"
-    user_input = "Impact of Gen AI coding tools on software engineering jobs, especially juniors - and solutions for team/tech companies"
+    user_input = USER_INPUT
     console.print(f"\n[bold]User Input:[/bold] {user_input}\n")
 
     report = await system.run(user_input)

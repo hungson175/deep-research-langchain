@@ -24,9 +24,18 @@ python clarifier.py    # Test clarification phase
 python supervisor.py   # Test supervisor coordination
 python researcher.py   # Test individual researcher
 
-# Run educational version (no logging)
+# Run educational version (consolidated, no logging)
 cd educational_no_logging
-python deep_research_system_complete.py
+python core_system.py
+```
+
+### Development
+```bash
+# No specific test framework configured - tests are manual
+# To test LLM functionality, run individual component files
+
+# Check for Python syntax errors
+python -m py_compile *.py
 ```
 
 ## Architecture Overview
@@ -53,10 +62,23 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 ## Key Components
 
 - **Cache Strategy**: `cache_strategy.py` implements caching for Anthropic models to optimize token usage
+  - `AnthropicCacheStrategy` for Claude models uses prompt caching
+  - `StandardCacheStrategy` for other models (no caching)
+  - `CacheStrategyFactory` automatically selects appropriate strategy
 - **Prompts**: All system prompts centralized in `prompts.py`
+  - Lead researcher prompt (supervisor coordination)
+  - Research brief creation prompts
+  - Final report generation template
 - **Utils**: Helper functions in `utils.py` for formatting, logging, and tool management
+  - Tavily search tool wrapper
+  - Think tool for researcher reflection
+  - Message formatting utilities
 - **Reports Directory**: `./reports/` stores saved research reports (gitignored)
+  - Auto-generated filenames: `{description}_{YYYYMMDD_HHMM}.md`
 - **Educational Version**: `./educational_no_logging/` contains consolidated clean code for learning
+  - `core_system.py` - All classes in one file (~310 lines)
+  - `prompts.py` - Prompts only (~78 lines)
+  - `utils.py` - Helpers and cache strategies (~159 lines)
 - **Visual Logging**: Rich library provides beautiful console output with progress tracking
 - **Models Used**:
   - Clarifier: `xai:grok-code-fast-1`
@@ -67,7 +89,17 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 ## API Keys Required
 
 The system requires the following API keys in `.env`:
-- `ANTHROPIC_API_KEY` - For Claude models
-- `XAI_API_KEY` - For Grok models
+- `ANTHROPIC_API_KEY` - For Claude models (final report generation)
+- `XAI_API_KEY` - For Grok models (clarifier, supervisor, researchers)
 - `TAVILY_API_KEY` - For web search functionality
 - Optional: `OPENAI_API_KEY`, `GOOGLE_API_KEY` for alternative models
+
+## Important Notes
+
+- **Do NOT test LLM-related code** without explicit instruction - API calls are expensive
+- The system uses async/await throughout - all main functions are coroutines
+- Research iteration limits: Supervisor (6 iterations), each Researcher (3 iterations)
+- Up to 3 concurrent researchers can be launched in parallel
+- Reports are automatically saved with descriptive filenames based on user input
+- The educational version in `educational_no_logging/` has identical logic but cleaner presentation
+- `mirmir_research_agent.py` exists but is separate from the main research pipeline

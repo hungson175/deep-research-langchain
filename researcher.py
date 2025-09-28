@@ -8,26 +8,23 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from prompts import compress_research_combined_prompt, research_agent_prompt
 from cache_strategy import CacheStrategyFactory
+from config import RESEARCHER_MODEL, RESEARCHER_MAX_TOOL_CALL_ITERATIONS
 
 # Uncomment to show the prompt during development
 # show_prompt(research_agent_prompt, "Research Agent Instructions")
 class Researcher:
-    __RESEARCHER_MODEL = "xai:grok-code-fast-1"
-    # __RESEARCHER_MODEL = "openai:gpt-4.1"
-    # __RESEARCHER_MODEL = "anthropic:claude-sonnet-4-20250514"
-    # __COMPRESSION_MODEL = "openai:gpt-4.1"  # Using GPT-4.1 for compression as in original
 
-    def __init__(self, max_tool_call_iterations: int = 3):
+    def __init__(self, max_tool_call_iterations: int = RESEARCHER_MAX_TOOL_CALL_ITERATIONS):
         console.print(Panel("[bold green]🔍 Initializing Researcher Agent[/bold green]", border_style="green"))
 
-        self.model = init_chat_model(model=self.__RESEARCHER_MODEL, max_tokens=64000)
+        self.model = init_chat_model(model=RESEARCHER_MODEL, max_tokens=64000)
         self.tools = [think_tool, tavily_search]
         self.model_with_tools = self.model.bind_tools(self.tools)
         self.max_tool_call_iterations = max_tool_call_iterations
 
         # Initialize cache strategy based on model
-        self.cache_strategy = CacheStrategyFactory.create_strategy(self.__RESEARCHER_MODEL)
-        console.print(f"[dim]Using model: {self.__RESEARCHER_MODEL}[/dim]")
+        self.cache_strategy = CacheStrategyFactory.create_strategy(RESEARCHER_MODEL)
+        console.print(f"[dim]Using model: {RESEARCHER_MODEL}[/dim]")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
         console.print(f"[dim]Max iterations: {max_tool_call_iterations}[/dim]")
 
