@@ -1,16 +1,15 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from utils import show_prompt, get_today_str, console
+from utils import show_prompt, get_today_str, console, init_xai_model
 from rich.panel import Panel
 from rich.text import Text
 from prompts import human_clarify_with_user_instructions, human_transform_messages_into_research_topic_prompt
 from pydantic import BaseModel, Field
-from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, get_buffer_string
 from typing import Union
 from cache_strategy import CacheStrategyFactory, MessageCacheStrategy
-from config import CLARIFIER_MODEL
+from config import CLARIFIER_MODEL, CLARIFIER_TEMPERATURE
 
 
 class ClarifyWithUser(BaseModel):
@@ -45,14 +44,16 @@ class ResearchBriefCreator:
     def __init__(self):
         console.print(Panel("[bold cyan]🎯 Initializing Research Brief Creator[/bold cyan]", border_style="cyan"))
 
-        self.llm = init_chat_model(model=CLARIFIER_MODEL, temperature=0.0)
+        self.llm = init_xai_model(model=CLARIFIER_MODEL, temperature=CLARIFIER_TEMPERATURE)
         # Single structured output model that can handle both response types
         self.structured_output_model = self.llm.with_structured_output(FlexibleResponse)
 
         # Initialize cache strategy based on model
-        self.cache_strategy = CacheStrategyFactory.create_strategy(CLARIFIER_MODEL)
+        self.cache_strategy = CacheStrategyFactory.create_strategy(f"xai:{CLARIFIER_MODEL}")
         console.print(f"[dim]Using model: {CLARIFIER_MODEL}[/dim]")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
+
+        self.total_tokens = 0
 
         # Create initial system message with caching if supported
         system_msg = self.cache_strategy.prepare_system_message(
@@ -74,6 +75,8 @@ class ResearchBriefCreator:
             console.print("[dim]Invoking LLM for clarification...[/dim]")
             # Invoke directly - messages already have cache from prepare_human_message
             flexible_response = self.structured_output_model.invoke(self.messages)
+            if hasattr(flexible_response, 'usage_metadata') and flexible_response.usage_metadata:
+                self.total_tokens += flexible_response.usage_metadata.get('total_tokens', 0)
 
             # DEBUG: Log the exact response
             console.print(f"[yellow]DEBUG - flexible_response type: {type(flexible_response)}[/yellow]")
@@ -125,6 +128,8 @@ class ResearchBriefCreator:
         console.print("[dim]Transforming conversation into research brief...[/dim]")
         # Invoke directly - messages already have cache from prepare_human_message
         flexible_response = self.structured_output_model.invoke(self.messages)
+        if hasattr(flexible_response, 'usage_metadata') and flexible_response.usage_metadata:
+            self.total_tokens += flexible_response.usage_metadata.get('total_tokens', 0)
 
         # Cleanup messages after invoke
         self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)

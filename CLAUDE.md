@@ -119,3 +119,5 @@ The system requires the following API keys in `.env`:
 - The educational version in `educational_no_logging/` has identical logic but cleaner presentation
 - `mirmir_research_agent.py` exists but is separate from the main research pipeline
 - **Insight generation** uses `permission_mode='acceptAll'` to allow Claude full access to all tools (Read, Write, Bash, etc.) for creating interactive HTML pages
+- **Performance tracking**: System automatically tracks time and token usage for each phase, displaying a summary table at the end
+- **Timeout configuration**: All LLM requests use `request_timeout=240` seconds (4 minutes) to prevent timeouts during long MirMir queries (which can take up to 3 minutes)

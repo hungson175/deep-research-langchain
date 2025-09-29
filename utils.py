@@ -10,17 +10,57 @@ from datetime import datetime
 from pydantic import Field
 from pydantic import BaseModel
 from typing_extensions import Annotated, List, Literal
+import os
+import httpx
 
-from langchain.chat_models import init_chat_model 
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, BaseMessage, filter_messages
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool, InjectedToolArg
 from tavily import TavilyClient
 
 from prompts import summarize_webpage_prompt
-from config import SUMMARIZATION_MODEL
+from config import (
+    SUMMARIZATION_MODEL,
+    SUMMARIZATION_TEMPERATURE,
+    XAI_BASE_URL,
+    LLM_HTTP_TIMEOUT
+)
 
 # ===== UTILITY FUNCTIONS =====
+
+def init_xai_model(
+    model: str,
+    temperature: float = 0.0,
+    max_tokens: int | None = None,
+    **kwargs
+) -> ChatOpenAI:
+    """Initialize ChatOpenAI with xAI configuration and custom HTTP timeout.
+
+    Args:
+        model: Model name (without 'xai:' prefix)
+        temperature: Sampling temperature
+        max_tokens: Maximum tokens to generate
+        **kwargs: Additional ChatOpenAI parameters
+
+    Returns:
+        Configured ChatOpenAI instance with custom httpx client
+    """
+    http_client = httpx.Client(timeout=LLM_HTTP_TIMEOUT)
+
+    params = {
+        "model": model,
+        "api_key": os.environ.get("XAI_API_KEY"),
+        "base_url": XAI_BASE_URL,
+        "http_client": http_client,
+        "temperature": temperature,
+        **kwargs
+    }
+
+    if max_tokens is not None:
+        params["max_tokens"] = max_tokens
+
+    return ChatOpenAI(**params)
 
 def get_today_str() -> str:
     """Get current date in a human-readable format."""
@@ -40,7 +80,7 @@ def get_current_dir() -> Path:
         return Path.cwd()
 
 # ===== CONFIGURATION =====
-summarization_model = init_chat_model(model=SUMMARIZATION_MODEL)
+summarization_model = init_xai_model(model=SUMMARIZATION_MODEL, temperature=SUMMARIZATION_TEMPERATURE)
 tavily_client = TavilyClient()
 
 # ===== SEARCH FUNCTIONS =====

@@ -4,21 +4,22 @@ Full Multi-Agent Research System (Non-LangGraph Implementation)
 
 import asyncio
 import re
+import time
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain.chat_models import init_chat_model
 from clarifier import ResearchBriefCreator
 from supervisor import Supervisor
-from utils import get_today_str, console
+from utils import get_today_str, console, init_xai_model
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.markdown import Markdown
+from rich.table import Table
 from prompts import final_report_generation_prompt
 from cache_strategy import CacheStrategyFactory
-from config import WRITER_MODEL
+from config import WRITER_MODEL, WRITER_TEMPERATURE, WRITER_MAX_TOKENS
 USER_INPUT = "So sánh hiệu quả hiệu quả business của MoMo với cách đối thủ mạnh nhất ở Việt Nam: Zalo Pay, VNPay , và đưa ra giải pháp để phát triển, dựa trên bài học từ chính các đối thủ đó, và các công ty thành công khác ở Trung Quốc"
 
 class DeepResearch:
@@ -27,9 +28,16 @@ class DeepResearch:
         console.print(Panel("[bold magenta]🚀 Initializing Deep Research System[/bold magenta]", border_style="magenta"))
         console.print(f"[dim]Writer model: {WRITER_MODEL}[/dim]")
 
-        self.writer_model = init_chat_model(model=WRITER_MODEL, max_tokens=32000)
-        self.cache_strategy = CacheStrategyFactory.create_strategy(WRITER_MODEL)
+        self.writer_model = init_xai_model(model=WRITER_MODEL, temperature=WRITER_TEMPERATURE, max_tokens=WRITER_MAX_TOKENS)
+        self.cache_strategy = CacheStrategyFactory.create_strategy(f"xai:{WRITER_MODEL}")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
+
+        self.metrics = {
+            "phase_times": {},
+            "phase_tokens": {},
+            "total_tokens": 0,
+            "total_time": 0
+        }
 
     async def generate_final_report(self, research_brief: str, research_notes: list) -> str:
         console.print(Panel(f"[bold magenta]📝 Generating Final Report[/bold magenta]\n\nUsing {len(research_notes)} research notes", border_style="magenta"))
@@ -55,6 +63,9 @@ class DeepResearch:
         ) as progress:
             task = progress.add_task("[magenta]Writing comprehensive report...", total=None)
             response = await self.writer_model.ainvoke([report_msg])
+            if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                phase3_tokens = response.usage_metadata.get('total_tokens', 0)
+                self.metrics["phase_tokens"]["Phase 3: Report"] = phase3_tokens
             progress.update(task, completed=True)
 
         console.print("[green]✅ Final report generation complete[/green]")
@@ -98,27 +109,37 @@ class DeepResearch:
         return str(file_path)
 
     async def run(self, user_input: str, save_to_file: bool = True, generate_insights: bool = True) -> str:
+        total_start_time = time.time()
+
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold cyan]🎯 DEEP RESEARCH SYSTEM - STARTING[/bold cyan]", border_style="cyan"))
         console.print("[bold]═" * 80 + "[/bold]\n")
 
         # Phase 1: Clarify and get research brief
         console.print(Panel("[bold blue]PHASE 1: CLARIFICATION & BRIEF CREATION[/bold blue]", border_style="blue"))
+        phase1_start = time.time()
         brief_creator = ResearchBriefCreator()
         result = brief_creator.run(user_input)
         research_brief = result.research_brief
+        self.metrics["phase_times"]["Phase 1: Clarification"] = time.time() - phase1_start
+        self.metrics["phase_tokens"]["Phase 1: Clarification"] = getattr(brief_creator, 'total_tokens', 0)
 
         # Phase 2: Conduct supervised research
         console.print("\n" + "=" * 80 + "\n")
         console.print(Panel("[bold yellow]PHASE 2: SUPERVISED RESEARCH[/bold yellow]", border_style="yellow"))
+        phase2_start = time.time()
         supervisor = Supervisor(research_brief=research_brief)
         result = await supervisor.start_supervision()
         research_notes = result["notes"]
+        self.metrics["phase_times"]["Phase 2: Research"] = time.time() - phase2_start
+        self.metrics["phase_tokens"]["Phase 2: Research"] = getattr(supervisor, 'total_tokens', 0)
 
         # Phase 3: Generate final report
         console.print("\n" + "=" * 80 + "\n")
         console.print(Panel("[bold magenta]PHASE 3: REPORT GENERATION[/bold magenta]", border_style="magenta"))
+        phase3_start = time.time()
         report = await self.generate_final_report(research_brief, research_notes)
+        self.metrics["phase_times"]["Phase 3: Report"] = time.time() - phase3_start
 
         # Save report to file if requested
         if save_to_file:
@@ -128,13 +149,43 @@ class DeepResearch:
         if generate_insights:
             console.print("\n" + "=" * 80 + "\n")
             console.print(Panel("[bold cyan]PHASE 4: INSIGHT PAGE GENERATION[/bold cyan]", border_style="cyan"))
+            phase4_start = time.time()
             await self._generate_insight_page(research_notes, research_brief, user_input)
+            self.metrics["phase_times"]["Phase 4: Insights"] = time.time() - phase4_start
+
+        self.metrics["total_time"] = time.time() - total_start_time
+        self.metrics["total_tokens"] = sum(self.metrics["phase_tokens"].values())
 
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold green]✨ DEEP RESEARCH COMPLETE[/bold green]", border_style="green"))
+        self._display_metrics()
         console.print("[bold]═" * 80 + "[/bold]\n")
 
         return report
+
+    def _display_metrics(self):
+        """Display performance metrics in a nice table."""
+        table = Table(title="📊 Performance Metrics", show_header=True, header_style="bold cyan")
+        table.add_column("Phase", style="white", width=30)
+        table.add_column("Time", style="yellow", justify="right")
+        table.add_column("Tokens", style="green", justify="right")
+
+        for phase_name, phase_time in self.metrics["phase_times"].items():
+            tokens = self.metrics["phase_tokens"].get(phase_name, 0)
+            time_str = f"{phase_time:.2f}s"
+            token_str = f"{tokens:,}" if tokens > 0 else "N/A"
+            table.add_row(phase_name, time_str, token_str)
+
+        table.add_row("─" * 30, "─" * 10, "─" * 10, style="dim")
+        table.add_row(
+            "[bold]TOTAL",
+            f"[bold]{self.metrics['total_time']:.2f}s",
+            f"[bold]{self.metrics['total_tokens']:,}" if self.metrics['total_tokens'] > 0 else "[bold]N/A"
+        )
+
+        console.print("\n")
+        console.print(table)
+        console.print("\n")
 
     async def _generate_insight_page(self, research_notes: list, research_brief: str, user_input: str):
         """Generate interactive HTML insight page from research notes."""

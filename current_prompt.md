@@ -1,8 +1,38 @@
-# COMPLETED ✅ (Updated with SDK corrections)
+# COMPLETED ✅
 
-Successfully added SPA (insight page) generation to the deep research system.
+## Latest Updates:
 
-## Latest Update (SDK Configuration):
+### 1. Performance Metrics & Token Counting (NEW)
+- ✅ Added timing tracking for all 4 phases
+- ✅ Added token counting using usage_metadata from LangChain responses
+- ✅ Created beautiful summary table with Rich library showing:
+  - Time taken per phase
+  - Tokens used per phase
+  - Total time and total tokens
+- ✅ Metrics automatically displayed at the end of each research run
+
+**Example output:**
+```
+📊 Performance Metrics
+┌────────────────────────────┬──────────┬──────────┐
+│ Phase                      │     Time │   Tokens │
+├────────────────────────────┼──────────┼──────────┤
+│ Phase 1: Clarification     │   12.45s │   1,234  │
+│ Phase 2: Research          │  156.78s │  15,678  │
+│ Phase 3: Report            │   23.56s │   8,901  │
+│ Phase 4: Insights          │   45.12s │      N/A │
+│ ────────────────────────── │ ──────── │ ──────── │
+│ TOTAL                      │  237.91s │  25,813  │
+└────────────────────────────┴──────────┴──────────┘
+```
+
+**Implementation details:**
+- `clarifier.py`: Added `self.total_tokens` tracking
+- `supervisor.py`: Added `self.total_tokens` tracking
+- `deep_research_system.py`: Added metrics dict and `_display_metrics()` method
+- Phase 4 (Insights) uses Claude Code SDK - token counting not available
+
+### 2. SDK Configuration (Previous):
 - ✅ Changed `permission_mode` from `'acceptEdits'` to `'acceptAll'` for full tool access
 - ✅ Removed `allowed_tools` restriction - Claude now has access to ALL tools (Read, Write, Bash, Glob, etc.)
 - ✅ Increased `max_turns` from 5 to 10 for more complex HTML generation

@@ -4,20 +4,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from researcher import Researcher
-from utils import show_prompt, get_notes_from_tool_calls, format_messages, console
+from utils import show_prompt, get_notes_from_tool_calls, format_messages, console, init_xai_model
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from prompts import lead_researcher_prompt
 from cache_strategy import CacheStrategyFactory
-from config import (SUPERVISOR_MODEL, MIRMIR_API_SERVER_BASE_URL, MIRMIR_TIMEOUT_SECONDS,
+from config import (SUPERVISOR_MODEL, SUPERVISOR_TEMPERATURE, MIRMIR_API_SERVER_BASE_URL, MIRMIR_TIMEOUT_SECONDS,
                     RESEARCHER_MAX_TOOL_CALL_ITERATIONS, SUPERVISOR_MAX_RESEARCHER_ITERATIONS,
                     SUPERVISOR_MAX_CONCURRENT_RESEARCHERS)
 
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool
 from utils import get_today_str, think_tool
-from langchain.chat_models import init_chat_model
 
 # Uncomment to show the prompt during development
 # show_prompt(lead_researcher_prompt, "Lead Researcher Prompt")
@@ -124,7 +123,7 @@ class Supervisor:
         console.print(Panel("[bold yellow]🎯 Initializing Research Supervisor[/bold yellow]", border_style="yellow"))
 
         # Initialize cache strategy based on model
-        self.cache_strategy = CacheStrategyFactory.create_strategy(SUPERVISOR_MODEL)
+        self.cache_strategy = CacheStrategyFactory.create_strategy(f"xai:{SUPERVISOR_MODEL}")
         console.print(f"[dim]Using model: {SUPERVISOR_MODEL}[/dim]")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
         console.print(f"[dim]Max iterations: {max_researcher_iterations}[/dim]")
@@ -144,7 +143,8 @@ class Supervisor:
         self.notes = []
         self.max_research_iterations = max_researcher_iterations
         self.max_concurrent_researchers = max_concurrent_research_units
-        model = init_chat_model(model=SUPERVISOR_MODEL)
+        self.total_tokens = 0
+        model = init_xai_model(model=SUPERVISOR_MODEL, temperature=SUPERVISOR_TEMPERATURE)
         self.model_with_tools = model.bind_tools([conduct_research, query_momo_data, think_tool])
         
     async def start_supervision(self):
@@ -160,6 +160,8 @@ class Supervisor:
         console.print("[dim]Supervisor analyzing research brief and planning approach...[/dim]")
         # Invoke directly - messages already have cache from prepare_human_message
         response = await self.model_with_tools.ainvoke(self.messages)
+        if hasattr(response, 'usage_metadata') and response.usage_metadata:
+            self.total_tokens += response.usage_metadata.get('total_tokens', 0)
 
         # Cleanup and append response
         self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)
@@ -295,6 +297,8 @@ class Supervisor:
             console.print("[dim]Supervisor analyzing results and planning next steps...[/dim]")
             # Invoke directly - last tool message already has cache if needed
             response = await self.model_with_tools.ainvoke(self.messages)
+            if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                self.total_tokens += response.usage_metadata.get('total_tokens', 0)
 
             # Cleanup and append
             self.messages = self.cache_strategy.cleanup_messages_after_invoke(self.messages)

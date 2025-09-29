@@ -2,13 +2,12 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain.chat_models import init_chat_model
-from utils import show_prompt, get_today_str, tavily_search, think_tool, console
+from utils import show_prompt, get_today_str, tavily_search, think_tool, console, init_xai_model
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from prompts import compress_research_combined_prompt, research_agent_prompt
 from cache_strategy import CacheStrategyFactory
-from config import RESEARCHER_MODEL, RESEARCHER_MAX_TOOL_CALL_ITERATIONS
+from config import RESEARCHER_MODEL, RESEARCHER_TEMPERATURE, RESEARCHER_MAX_TOOL_CALL_ITERATIONS
 
 # Uncomment to show the prompt during development
 # show_prompt(research_agent_prompt, "Research Agent Instructions")
@@ -17,13 +16,17 @@ class Researcher:
     def __init__(self, max_tool_call_iterations: int = RESEARCHER_MAX_TOOL_CALL_ITERATIONS):
         console.print(Panel("[bold green]🔍 Initializing Researcher Agent[/bold green]", border_style="green"))
 
-        self.model = init_chat_model(model=RESEARCHER_MODEL, max_tokens=64000)
+        self.model = init_xai_model(
+            model=RESEARCHER_MODEL,
+            temperature=RESEARCHER_TEMPERATURE,
+            max_tokens=64000
+        )
         self.tools = [think_tool, tavily_search]
         self.model_with_tools = self.model.bind_tools(self.tools)
         self.max_tool_call_iterations = max_tool_call_iterations
 
         # Initialize cache strategy based on model
-        self.cache_strategy = CacheStrategyFactory.create_strategy(RESEARCHER_MODEL)
+        self.cache_strategy = CacheStrategyFactory.create_strategy(f"xai:{RESEARCHER_MODEL}")
         console.print(f"[dim]Using model: {RESEARCHER_MODEL}[/dim]")
         console.print(f"[dim]Cache strategy: {self.cache_strategy.__class__.__name__}[/dim]")
         console.print(f"[dim]Max iterations: {max_tool_call_iterations}[/dim]")
