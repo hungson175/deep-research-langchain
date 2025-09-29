@@ -1,15 +1,15 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from utils import show_prompt, get_today_str, console, init_xai_model
+from .utils import show_prompt, get_today_str, console, init_xai_model
 from rich.panel import Panel
 from rich.text import Text
-from prompts import human_clarify_with_user_instructions, human_transform_messages_into_research_topic_prompt
+from .prompts import human_clarify_with_user_instructions, human_transform_messages_into_research_topic_prompt
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, get_buffer_string
 from typing import Union
-from cache_strategy import CacheStrategyFactory, MessageCacheStrategy
-from config import CLARIFIER_MODEL, CLARIFIER_TEMPERATURE
+from .cache_strategy import CacheStrategyFactory, MessageCacheStrategy
+from .config import CLARIFIER_MODEL, CLARIFIER_TEMPERATURE
 
 
 class ClarifyWithUser(BaseModel):

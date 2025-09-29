@@ -2,12 +2,12 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-from utils import show_prompt, get_today_str, tavily_search, think_tool, console, init_xai_model
+from .utils import show_prompt, get_today_str, tavily_search, think_tool, console, init_xai_model
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from prompts import compress_research_combined_prompt, research_agent_prompt
-from cache_strategy import CacheStrategyFactory
-from config import RESEARCHER_MODEL, RESEARCHER_TEMPERATURE, RESEARCHER_MAX_TOOL_CALL_ITERATIONS
+from .prompts import compress_research_combined_prompt, research_agent_prompt
+from .cache_strategy import CacheStrategyFactory
+from .config import RESEARCHER_MODEL, RESEARCHER_TEMPERATURE, RESEARCHER_MAX_TOOL_CALL_ITERATIONS
 
 # Uncomment to show the prompt during development
 # show_prompt(research_agent_prompt, "Research Agent Instructions")

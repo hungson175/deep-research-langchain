@@ -6,7 +6,7 @@ Simple test for InsightGenerator with a more direct approach.
 import asyncio
 import json
 from pathlib import Path
-from insight_generator import InsightGenerator
+from src.insight_generator import InsightGenerator
 
 async def main():
     """Test the insight generator with a simpler approach."""

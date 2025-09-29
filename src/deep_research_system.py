@@ -10,16 +10,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
-from clarifier import ResearchBriefCreator
-from supervisor import Supervisor
-from utils import get_today_str, console, init_xai_model
+from .clarifier import ResearchBriefCreator
+from .supervisor import Supervisor
+from .utils import get_today_str, console, init_xai_model
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.markdown import Markdown
 from rich.table import Table
-from prompts import final_report_generation_prompt
-from cache_strategy import CacheStrategyFactory
-from config import WRITER_MODEL, WRITER_TEMPERATURE, WRITER_MAX_TOKENS
+from .prompts import final_report_generation_prompt
+from .cache_strategy import CacheStrategyFactory
+from .config import WRITER_MODEL, WRITER_TEMPERATURE, WRITER_MAX_TOKENS
 USER_INPUT = "So sánh hiệu quả hiệu quả business của MoMo với cách đối thủ mạnh nhất ở Việt Nam: Zalo Pay, VNPay , và đưa ra giải pháp để phát triển, dựa trên bài học từ chính các đối thủ đó, và các công ty thành công khác ở Trung Quốc"
 
 class DeepResearch:
@@ -190,7 +190,7 @@ class DeepResearch:
     async def _generate_insight_page(self, research_notes: list, research_brief: str, user_input: str):
         """Generate interactive HTML insight page from research notes."""
         try:
-            from insight_generator import generate_insight_from_notes
+            from .insight_generator import generate_insight_from_notes
 
             short_desc = re.sub(r'[^a-zA-Z0-9_]+', '_', user_input[:50]).strip('_').lower()
             timestamp = datetime.now().strftime("%Y%m%d_%H%M")

@@ -16,13 +16,20 @@ cp .env.example .env
 
 ### Running the System
 ```bash
-# Run the main research system
-python deep_research_system.py
+# Run the main research system (recommended)
+python main.py
+
+# Or run the core system directly
+python -m src.deep_research_system
 
 # Run individual components for testing
-python clarifier.py    # Test clarification phase
-python supervisor.py   # Test supervisor coordination
-python researcher.py   # Test individual researcher
+python -m src.clarifier    # Test clarification phase
+python -m src.supervisor   # Test supervisor coordination
+python -m src.researcher   # Test individual researcher
+
+# Run tests
+python -m pytest tests/   # Run all tests
+python tests/simple_test.py   # Run simple integration test
 
 # Run educational version (consolidated, no logging)
 cd educational_no_logging
@@ -31,35 +38,74 @@ python core_system.py
 
 ### Development
 ```bash
-# No specific test framework configured - tests are manual
-# To test LLM functionality, run individual component files
+# Run tests (avoid testing LLM functionality unless necessary - it's expensive)
+python tests/simple_test.py              # Simple integration test
+python tests/test_insight_generator.py   # Test insight generation
 
 # Check for Python syntax errors
-python -m py_compile *.py
+python -m py_compile src/*.py
+python -m py_compile tests/*.py
+python -m py_compile main.py
+```
+
+## Project Structure
+
+```
+deep_research_langchain/
+├── main.py                     # Main entry point for the system
+├── src/                        # Core application modules
+│   ├── __init__.py            # Package initialization
+│   ├── cache_strategy.py      # LLM caching strategies
+│   ├── clarifier.py           # Research brief creation
+│   ├── config.py              # Configuration and settings
+│   ├── deep_research_system.py # Main orchestration system
+│   ├── insight_generator.py   # HTML insight page generation
+│   ├── prompts.py             # All system prompts
+│   ├── researcher.py          # Individual research agent
+│   ├── supervisor.py          # Multi-agent coordination
+│   └── utils.py               # Helper functions and tools
+├── tests/                     # Test files
+│   ├── simple_test.py         # Simple integration test
+│   └── test_insight_generator.py # Insight generator tests
+├── docs/                      # Documentation
+│   └── current_prompt.md      # Development progress notes
+├── educational_no_logging/    # Clean reference implementation
+│   ├── core_system.py         # Consolidated system (all classes)
+│   ├── prompts.py            # Prompts only
+│   ├── utils.py              # Utilities only
+│   └── README.md             # Educational documentation
+├── reports/                   # Generated research outputs (gitignored)
+│   ├── .gitignore            # Ignore all content except this file
+│   ├── htmls/                # HTML insight pages
+│   └── spas/                 # Single-page applications
+├── sample_codes/              # Reference code (not part of main system)
+├── .env.example              # Environment variables template
+├── requirements.txt          # Python dependencies
+└── CLAUDE.md                 # This file
 ```
 
 ## Architecture Overview
 
 This is a multi-agent deep research system built with LangChain (without LangGraph). The system follows a four-phase architecture:
 
-### Phase 1: Clarification (clarifier.py)
+### Phase 1: Clarification (src/clarifier.py)
 - `ResearchBriefCreator` class interacts with users to clarify research intent
 - Transforms user input into structured research briefs
 - Uses Grok Code Fast model by default
 
-### Phase 2: Supervised Research (supervisor.py)
+### Phase 2: Supervised Research (src/supervisor.py)
 - `Supervisor` class coordinates multiple parallel research agents
 - Uses lead researcher prompt to plan and delegate research tasks
 - Launches up to 3 concurrent `Researcher` agents
 - Each researcher has 3 iterations to gather information using Tavily search
 
-### Phase 3: Report Generation (deep_research_system.py)
+### Phase 3: Report Generation (src/deep_research_system.py)
 - `DeepResearch` class orchestrates the entire pipeline
 - Collects research notes from all agents
 - Generates comprehensive final report using Claude Sonnet model
 - Automatically saves reports to `./reports/` directory with timestamp-based filenames
 
-### Phase 4: Insight Page Generation (insight_generator.py) - NEW
+### Phase 4: Insight Page Generation (src/insight_generator.py) - NEW
 - `InsightGenerator` class creates interactive HTML insight pages from research notes
 - Generates concise 2-4 page visual summaries highlighting key findings
 - Uses Claude Code SDK to generate interactive HTML with charts/tabs
@@ -69,22 +115,22 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 
 ## Key Components
 
-- **Cache Strategy**: `cache_strategy.py` implements caching for Anthropic models to optimize token usage
+- **Cache Strategy**: `src/cache_strategy.py` implements caching for Anthropic models to optimize token usage
   - `AnthropicCacheStrategy` for Claude models uses prompt caching
   - `StandardCacheStrategy` for other models (no caching)
   - `CacheStrategyFactory` automatically selects appropriate strategy
-- **Prompts**: All system prompts centralized in `prompts.py`
+- **Prompts**: All system prompts centralized in `src/prompts.py`
   - Lead researcher prompt (supervisor coordination)
   - Research brief creation prompts
   - Final report generation template
-- **Utils**: Helper functions in `utils.py` for formatting, logging, and tool management
+- **Utils**: Helper functions in `src/utils.py` for formatting, logging, and tool management
   - Tavily search tool wrapper
   - Think tool for researcher reflection
   - Message formatting utilities
 - **Reports Directory**: `./reports/` stores saved research reports (gitignored)
   - Auto-generated filenames: `{description}_{YYYYMMDD_HHMM}.md`
   - HTML insight pages: `./reports/htmls/insights_{description}_{YYYYMMDD_HHMM}.html`
-- **Insight Generator**: `insight_generator.py` creates interactive HTML summaries (NEW)
+- **Insight Generator**: `src/insight_generator.py` creates interactive HTML summaries (NEW)
   - Extracts key insights from research notes (not final report)
   - Generates 2-4 page visual summaries with charts/tabs
   - Uses Claude Code SDK for HTML generation

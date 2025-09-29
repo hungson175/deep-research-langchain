@@ -3,20 +3,20 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-from researcher import Researcher
-from utils import show_prompt, get_notes_from_tool_calls, format_messages, console, init_xai_model
+from .researcher import Researcher
+from .utils import show_prompt, get_notes_from_tool_calls, format_messages, console, init_xai_model
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from prompts import lead_researcher_prompt
-from cache_strategy import CacheStrategyFactory
-from config import (SUPERVISOR_MODEL, SUPERVISOR_TEMPERATURE, MIRMIR_API_SERVER_BASE_URL, MIRMIR_TIMEOUT_SECONDS,
+from .prompts import lead_researcher_prompt
+from .cache_strategy import CacheStrategyFactory
+from .config import (SUPERVISOR_MODEL, SUPERVISOR_TEMPERATURE, MIRMIR_API_SERVER_BASE_URL, MIRMIR_TIMEOUT_SECONDS,
                     RESEARCHER_MAX_TOOL_CALL_ITERATIONS, SUPERVISOR_MAX_RESEARCHER_ITERATIONS,
                     SUPERVISOR_MAX_CONCURRENT_RESEARCHERS)
 
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
 from langchain_core.tools import tool
-from utils import get_today_str, think_tool
+from .utils import get_today_str, think_tool
 
 # Uncomment to show the prompt during development
 # show_prompt(lead_researcher_prompt, "Lead Researcher Prompt")

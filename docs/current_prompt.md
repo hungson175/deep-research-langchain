@@ -77,7 +77,7 @@ report = await system.run(user_input)  # Insight page auto-generated
 report = await system.run(user_input, generate_insights=False)
 
 # Standalone usage
-from insight_generator import generate_insight_from_notes
+from src.insight_generator import generate_insight_from_notes
 success, path = await generate_insight_from_notes(
     research_notes=notes,
     research_brief=brief,
