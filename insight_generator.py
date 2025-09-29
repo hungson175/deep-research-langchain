@@ -132,13 +132,13 @@ class InsightGenerator:
         })
 
         insight_prompt = f"""
-Create an interactive single-page HTML insight summary that highlights KEY FINDINGS and ACTIONABLE INSIGHTS from research notes.
+Create an interactive single-page HTML insight summary that highlights KEY FINDINGS and ACTIONABLE INSIGHTS from research notes using MoMo's design system.
 
 IMPORTANT CONTEXT:
 - This is NOT a full report - it's a visual executive summary (2-3 pages when printed)
 - Purpose: Help users quickly understand key insights and decide if they want to read the full report
 - Focus: Patterns, trends, surprising findings, actionable recommendations
-- Format: Modern, visual, interactive with charts/tabs/sections
+- Format: Modern, visual, interactive with charts/tabs/sections using MoMo design system
 
 RESEARCH BRIEF:
 {research_brief}
@@ -153,69 +153,130 @@ YOUR TASK:
    - Surprising or counterintuitive findings
    - Actionable recommendations
 
-2. Create a self-contained HTML file with:
-   - Professional header with title{f': {title}' if title else ''}
+2. Create a self-contained HTML file with MoMo design system:
+   - Professional MoMo-style navigation with logo
    - Executive summary (2-3 sentences)
    - Key insights section with visual emphasis
    - Data visualizations (charts, comparison tables) where appropriate
    - Tabbed sections for different aspects if needed
    - Actionable recommendations highlighted
    - Modern, responsive design with smooth interactions
+   - MoMo footer with company information
    - All CSS/JS inline (Chart.js from CDN is allowed)
 
-3. Design principles:
-   - Use color coding for emphasis (green=positive, yellow=caution, blue=info)
-   - Make insights scannable with icons and visual hierarchy
-   - Include collapsible sections for details
-   - Keep it concise - 2-4 printed pages max
-   - Professional color scheme (not childish)
+3. MANDATORY MoMo Design System Requirements:
+   - Use MoMo color palette: Primary Pink #a50064, Secondary Pink #d82f8b, Light Pink #f9b5c3
+   - Use Tailwind CSS from CDN: https://cdn.tailwindcss.com
+   - Include MoMo logo: https://homepage.momocdn.net/fileuploads/svg/momo-file-240411162904.svg
+   - Follow MoMo CSS classes and patterns from the design system
+   - Use MoMo shadows, typography, and component styles
+   - Professional fintech aesthetic with trustworthy design
 
-4. Structure example:
+4. Required Structure with MoMo Components:
    ```html
    <!DOCTYPE html>
    <html>
    <head>
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Research Insights</title>
+     <title>Research Insights{f': {title}' if title else ''}</title>
      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
      <style>
-       /* Modern, professional styles */
+       :root {{
+         --momo-pink-primary: #a50064;
+         --momo-pink-secondary: #d82f8b;
+         --momo-pink-light: #f9b5c3;
+         --momo-gray-900: #1c171a;
+         --momo-gray-600: #574d56;
+         --momo-gray-100: #f5f4f5;
+         --momo-shadow-sm: 0px 0px 5px 0px rgba(0, 0, 0, 0.02), 0px 2px 10px 0px rgba(0, 0, 0, 0.06);
+         --momo-shadow-md: 0px 0px 15px 0px rgba(0, 0, 0, 0.03), 0px 2px 30px 0px rgba(0, 0, 0, 0.08);
+       }}
+       /* Add custom MoMo styles here */
      </style>
    </head>
-   <body>
-     <header>
-       <h1>Research Insights</h1>
-       <p class="executive-summary">...</p>
-     </header>
+   <body class="bg-gray-50">
+     <!-- MoMo Navigation -->
+     <nav class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+         <div class="flex items-center space-x-3">
+           <img src="https://homepage.momocdn.net/fileuploads/svg/momo-file-240411162904.svg" alt="MoMo" class="h-8 w-auto" />
+         </div>
+       </div>
+     </nav>
 
-     <section class="key-insights">
-       <h2>🎯 Key Insights</h2>
-       <!-- Highlighted key findings -->
-     </section>
+     <!-- Main Content -->
+     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+       <!-- Executive Summary -->
+       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 mb-8">
+         <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Research Insights</h1>
+         <p class="text-lg text-gray-600 leading-relaxed">Executive summary...</p>
+       </div>
 
-     <section class="visualizations">
-       <h2>📊 Data Visualizations</h2>
-       <!-- Charts, graphs, comparison tables -->
-     </section>
+       <!-- Key Insights -->
+       <section class="mb-8">
+         <h2 class="text-2xl font-semibold text-gray-900 mb-6">🎯 Key Insights</h2>
+         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           <!-- Insight cards with MoMo styling -->
+         </div>
+       </section>
 
-     <section class="recommendations">
-       <h2>💡 Recommendations</h2>
-       <!-- Actionable next steps -->
-     </section>
+       <!-- Data Visualizations -->
+       <section class="mb-8">
+         <h2 class="text-2xl font-semibold text-gray-900 mb-6">📊 Data Visualizations</h2>
+         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+           <!-- Charts and graphs -->
+         </div>
+       </section>
+
+       <!-- Recommendations -->
+       <section class="mb-8">
+         <h2 class="text-2xl font-semibold text-gray-900 mb-6">💡 Recommendations</h2>
+         <div class="space-y-4">
+           <!-- Recommendation cards -->
+         </div>
+       </section>
+     </main>
+
+     <!-- MoMo Footer -->
+     <footer class="bg-gray-50 border-t border-gray-200 py-8 mt-12">
+       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+         <div class="flex items-center space-x-3 mb-4">
+           <img src="https://homepage.momocdn.net/fileuploads/svg/momo-file-240411162904.svg" alt="MoMo" class="h-8 w-auto" />
+           <span class="font-semibold text-gray-900">MoMo</span>
+         </div>
+         <div class="text-sm text-gray-600 leading-relaxed">
+           <p class="font-semibold text-gray-900">CÔNG TY CỔ PHẦN DỊCH VỤ DI ĐỘNG TRỰC TUYẾN</p>
+           <p>Trụ sở chính: Tầng 6, Tòa nhà Phú Mỹ Hưng, Số 8, đường Hoàng Văn Thái, Phường Tân Mỹ, Thành phố Hồ Chí Minh</p>
+           <p><strong>Tên thương hiệu:</strong> MoMo</p>
+         </div>
+         <div class="text-xs text-gray-500 mt-4">
+           <p>©Copyright M_Service 2025</p>
+         </div>
+       </div>
+     </footer>
    </body>
    </html>
    ```
 
+5. MoMo Component Guidelines:
+   - Use .card-momo classes for insight cards
+   - Use .btn-primary for primary actions with MoMo pink
+   - Use .service-card pattern for key insights
+   - Implement proper spacing with .section-spacing
+   - Use MoMo typography classes (.heading-1, .heading-2, .text-body)
+   - Apply MoMo shadows (--momo-shadow-sm, --momo-shadow-md)
+
 SAVE THE HTML FILE TO: {output_path}
 
-Remember: This is an INSIGHT PAGE, not a full report. Focus on what matters most!
+Remember: This is an INSIGHT PAGE using MoMo's professional fintech design system. Focus on what matters most with MoMo's trustworthy aesthetic!
 """
 
         options = ClaudeCodeOptions(
-            permission_mode='acceptAll',
-            max_turns=10,
-            system_prompt="You are an expert data analyst and web designer. Create concise, visual HTML insight pages that highlight key findings and actionable recommendations. Use modern web design with charts and interactive elements. Focus on clarity and impact."
+            permission_mode='bypassPermissions',
+            max_turns=50,
+            system_prompt="You are an expert data analyst and web designer specializing in MoMo's design system. Create concise, visual HTML insight pages that highlight key findings and actionable recommendations using MoMo's professional fintech aesthetic. Use MoMo's color palette (#a50064, #d82f8b, #f9b5c3), Tailwind CSS, official MoMo logo, and component patterns. Focus on trustworthy, modern design with charts and interactive elements that reflect MoMo's brand identity."
         )
 
         try:

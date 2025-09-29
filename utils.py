@@ -232,7 +232,7 @@ def tavily_search(
     """Fetch results from Tavily search API with content summarization.
 
     Args:
-        query: A single search query to execute
+        query: A single search query to execute, the query should not be too long, 400 characters is the limit of Tavily Search API
         max_results: Maximum number of results to return
         topic: Topic to filter results by ('general', 'news', 'finance')
 
