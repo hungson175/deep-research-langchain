@@ -108,21 +108,46 @@ class DeepResearch:
         console.print(f"[green]📁 Report saved to: {file_path}[/green]")
         return str(file_path)
 
-    async def run(self, user_input: str, save_to_file: bool = True, generate_insights: bool = True) -> str:
+    async def run(
+        self,
+        user_input: str,
+        save_to_file: bool = True,
+        generate_insights: bool = True,
+        skip_clarifier: bool = False,
+        research_brief: str = None
+    ) -> str:
+        """Run the deep research system.
+
+        Args:
+            user_input: User's research query or brief description
+            save_to_file: Whether to save the final report to a file
+            generate_insights: Whether to generate HTML insight page
+            skip_clarifier: If True, skip Phase 1 clarification and use research_brief directly
+            research_brief: Pre-formed research brief (required if skip_clarifier=True)
+
+        Returns:
+            The final research report as a string
+        """
         total_start_time = time.time()
 
         console.print("\n[bold]═" * 80 + "[/bold]")
         console.print(Panel("[bold cyan]🎯 DEEP RESEARCH SYSTEM - STARTING[/bold cyan]", border_style="cyan"))
         console.print("[bold]═" * 80 + "[/bold]\n")
 
-        # Phase 1: Clarify and get research brief
-        console.print(Panel("[bold blue]PHASE 1: CLARIFICATION & BRIEF CREATION[/bold blue]", border_style="blue"))
-        phase1_start = time.time()
-        brief_creator = ResearchBriefCreator()
-        result = brief_creator.run(user_input)
-        research_brief = result.research_brief
-        self.metrics["phase_times"]["Phase 1: Clarification"] = time.time() - phase1_start
-        self.metrics["phase_tokens"]["Phase 1: Clarification"] = getattr(brief_creator, 'total_tokens', 0)
+        # Phase 1: Clarify and get research brief (optional)
+        if skip_clarifier:
+            if not research_brief:
+                raise ValueError("research_brief must be provided when skip_clarifier=True")
+            console.print(Panel("[bold blue]PHASE 1: CLARIFICATION - SKIPPED[/bold blue]\n[dim]Using pre-formed research brief[/dim]", border_style="blue"))
+            console.print(f"\n[cyan]Research Brief:[/cyan]\n{research_brief[:500]}...\n")
+        else:
+            console.print(Panel("[bold blue]PHASE 1: CLARIFICATION & BRIEF CREATION[/bold blue]", border_style="blue"))
+            phase1_start = time.time()
+            brief_creator = ResearchBriefCreator()
+            result = brief_creator.run(user_input)
+            research_brief = result.research_brief
+            self.metrics["phase_times"]["Phase 1: Clarification"] = time.time() - phase1_start
+            self.metrics["phase_tokens"]["Phase 1: Clarification"] = getattr(brief_creator, 'total_tokens', 0)
 
         # Phase 2: Conduct supervised research
         console.print("\n" + "=" * 80 + "\n")
@@ -214,6 +239,21 @@ class DeepResearch:
         except Exception as e:
             console.print(f"[red]❌ Error generating insight page: {e}[/red]")
 
+
+RESEARCH_BRIEF = """Adoption of AI and Emerging Technologies in MoMo's Payment Innovations
+
+**Research Objective/Question:** Examine the integration of AI, blockchain, and RTPs in Vietnam's fintech ecosystem, and develop a strategy for MoMo to adopt these for productivity gains and disruption resilience amid SEA's digital payment surge.
+
+**Background Context:** SEA's digital payments are set to hit $789B in 2025, with RTPs reaching $11T by 2028 and AI driving 7-9% cost savings for firms like MoMo. As mobile wallets surpass cards (66% POS share by 2027), technologies like AI for fraud prevention (e.g., Visa's $3B investments) and blockchain for cross-border QR payments (e.g., with Thailand) offer MoMo opportunities to enhance efficiency and user experience. However, lagging adoption could expose MoMo to transformational disruption from tech-savvy competitors like VNG's ZaloPay, especially in a market with 32.77M e-wallet users and rapid ecommerce growth, while talent challenges and regulatory hurdles (e.g., AI labeling from 2025) pose risks to innovation.
+
+**Specific Areas to Investigate:**
+- Tech trends: 2025 adoption rates of AI in credit scoring, blockchain for interoperability, and RTPs in Vietnam/SEA, including MoMo's current vs. competitor implementations (e.g., VNPAY's QR integrations).
+- Productivity impacts: Case studies on AI-driven savings (e.g., 9% revenue growth in SEA) and blockchain's role in reducing cross-border fees.
+- Regulatory landscape: SBV guidelines on AI in payments, plus ASEAN initiatives like RPC for regional connectivity.
+- Internal capabilities: MoMo's tech stack gaps, talent acquisition needs (e.g., AI specialists), and pilot opportunities via the 2025 sandbox.
+- User shifts: Behavioral data on Gen Z preferences for voice payments, crypto, and AI personalization in transactions.
+
+**Expected Insights or Outcomes:** A phased adoption roadmap for AI/blockchain to cut operational costs by 15% and boost transaction volumes by 20-25%, with scenarios for leading versus lagging in the 2025-2028 digital payment race."""
 async def main():
     console.print("[bold]█" * 80 + "[/bold]")
     console.print(Panel("[bold cyan]DEEP RESEARCH SYSTEM - DEMO MODE[/bold cyan]", border_style="cyan", padding=(1, 2)))
@@ -221,11 +261,22 @@ async def main():
 
     system = DeepResearch()
 
+    # Example 1: Normal mode with clarifier
     # user_input = "Compare Deep Research products from OpenAI vs Google"
-    user_input = USER_INPUT
-    console.print(f"\n[bold]User Input:[/bold] {user_input}\n")
+    # report = await system.run(user_input)
 
-    report = await system.run(user_input)
+    # Example 2: Skip clarifier mode with pre-formed brief
+    # Copy-paste a research brief from .output/mrT_topics_*.md here
+    
+
+    user_input = "AI and Emerging Tech for MoMo Payments"  # Short description for filename
+    console.print(f"\n[bold]Research Mode:[/bold] Skip Clarifier (MrT-generated brief)\n")
+
+    report = await system.run(
+        user_input=user_input,
+        skip_clarifier=True,
+        research_brief=RESEARCH_BRIEF
+    )
 
     # Display the final report in a nice panel
     console.print("\n" + "=" * 80 + "\n")

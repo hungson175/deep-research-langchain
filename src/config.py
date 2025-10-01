@@ -1,7 +1,16 @@
 """Configuration file for LLM models used in the deep research system."""
 
+# Boss Model - Used by all CEO persona agents (MrT, ZaloPay CEO, VNPay CEO)
+# for strategic thinking and topic generation
+BOSS_MODEL = "grok-4-fast-reasoning"
+BOSS_TEMPERATURE = 0.0
+
 CLARIFIER_MODEL = "grok-4-fast"
 CLARIFIER_TEMPERATURE = 0.0
+
+QUESTION_GENERATOR_MODEL = "grok-4-fast-reasoning"  # Legacy - use BOSS_MODEL instead
+QUESTION_GENERATOR_TEMPERATURE = 0.0
+QUESTION_GENERATOR_MAX_TOOL_CALL_ITERATIONS = 3
 
 SUPERVISOR_MODEL = "grok-4-fast-reasoning"
 SUPERVISOR_TEMPERATURE = 0.0
@@ -21,7 +30,7 @@ WRITER_MAX_TOKENS = 32000
 # WRITER_MODEL = "anthropic:claude-sonnet-4-20250514"
 
 MIRMIR_API_SERVER_BASE_URL = "http://localhost:8001"
-MIRMIR_TIMEOUT_SECONDS = 180  # 3 minutes
+MIRMIR_TIMEOUT_SECONDS = 240  # 4 minutes
 
 # LLM API timeouts (in seconds)
 # Should be longer than MIRMIR_TIMEOUT to allow tool calls to complete

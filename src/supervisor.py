@@ -52,14 +52,24 @@ async def query_momo_data(query: str) -> str:
     USE FOR: MoMo operational metrics and business data
     DON'T USE FOR: Public info, real-time data, technical architecture, competitor research
 
-    Examples:
-    - "tình hình sản phẩm Moni trong năm 2025 ntn?"
-    - "GMV của MoMo từ 1/1/2025 đến 31/1/2025"
+    IMPORTANT - Keep queries SIMPLE and FOCUSED:
+    ✅ GOOD (one specific question):
+    - "GMV của MoMo trong tháng 1/2025"
+    - "Số lượng user active của MoMo trong Q4 2024"
+    - "Tình hình sản phẩm Moni trong năm 2025"
 
-    Note: Takes 1-4 minutes - so if possible, use it ALONE , not mixed with web-search tool. Ask naturally in Vietnamese or English.
+    ❌ BAD (multiple questions or overly complex):
+    - "MoMo's AI implementation, blockchain adoption, tech stack gaps, talent needs, and Gen Z behavior"
+    - Questions with 3+ topics combined
+    - Long lists of requirements in one query
+
+    STRATEGY: If you need multiple data points, call this tool MULTIPLE TIMES with separate focused questions.
+    This tool is SLOW (1-4 minutes per call) but MORE RELIABLE with simple queries.
+
+    Note: Takes 1-4 minutes - use it ALONE, not mixed with web-search tool. Ask naturally in Vietnamese or English.
 
     Args:
-        query: Your question about MoMo data
+        query: ONE specific, focused question about MoMo data
 
     Returns:
         Business data from MoMo's data warehouse
