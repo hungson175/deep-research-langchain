@@ -2,11 +2,11 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-from .utils import get_today_str, tavily_search, think_tool, console, init_xai_model
-from .persona_prompts import MRT_QUESTION_GENERATOR_PROMPT
+from ..utils.helpers import get_today_str, tavily_search, think_tool, console, init_xai_model
+from ..prompts.persona_prompts import MRT_QUESTION_GENERATOR_PROMPT
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from .config import BOSS_MODEL, BOSS_TEMPERATURE, QUESTION_GENERATOR_MAX_TOOL_CALL_ITERATIONS
+from ..utils.config import BOSS_MODEL, BOSS_TEMPERATURE, QUESTION_GENERATOR_MAX_TOOL_CALL_ITERATIONS
 from pydantic import BaseModel, Field
 from typing import List
 

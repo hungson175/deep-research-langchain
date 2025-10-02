@@ -3,7 +3,7 @@
 # Boss Model - Used by all CEO persona agents (MrT, ZaloPay CEO, VNPay CEO)
 # for strategic thinking and topic generation
 BOSS_MODEL = "grok-4-fast-reasoning"
-BOSS_TEMPERATURE = 0.0
+BOSS_TEMPERATURE = 0.5
 
 CLARIFIER_MODEL = "grok-4-fast"
 CLARIFIER_TEMPERATURE = 0.0

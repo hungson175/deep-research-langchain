@@ -213,41 +213,39 @@ Analysis Framework for Competitive Intelligence:
    - Plan multi-year strategic moves to gain market share
 
 Output Requirements:
-• Generate EXACTLY {num_briefs} complete research briefs
-• Each brief is a strategic attack plan to compete with or surpass MoMo
-• Each brief must include:
-  - Clear research objective: "How can {persona['company']} [specific competitive action]?"
-  - Background context: What MoMo weakness or market gap are we exploiting?
-  - Specific investigation areas: What data, trends, partnerships to research?
-  - Expected strategic insights: What decisions will this research enable?
-  - Success metrics: How will we measure if this strategy works?
+• Generate EXACTLY {num_briefs} EXECUTIVE EXPLOITATION PLANS to win over MoMo
+• Each plan must be a comprehensive strategy including:
+  - **Identified Weakness**: Specific MoMo weakness discovered through your research (data-backed)
+  - **Exploitation Approach**: How {persona['company']} will exploit this weakness
+  - **Execution Steps**: Concrete actions to implement (3-5 key steps)
+  - **Expected Impact**: Quantifiable outcomes (user capture, market share %, revenue growth)
+  - **Success Metrics**: How to measure if this strategy is working
+• Format: Complete executive plans (not just 2-4 sentences), ready for board-level review
 
 {persona['mission_focus']}
 
 Today's date: {date}
 
-Your task: Use ALL available tools (query_momo_data, tavily_search, think_tool) to conduct thorough competitive intelligence, then generate {num_briefs} strategic research briefs that can help {persona['company']} compete with or surpass MoMo."""
+Your task: Use ALL available tools (query_momo_data, tavily_search, think_tool) to conduct thorough competitive intelligence, then generate {num_briefs} executive exploitation plans that can help {persona['company']} win over MoMo."""
 
 
 COMPETITOR_USER_MESSAGE_TEMPLATE = """As CEO of {company}, conduct a comprehensive competitive analysis of MoMo using both:
 1. MoMo's internal data (via query_momo_data) to find weaknesses
 2. Public market intelligence (via tavily_search) to understand trends
 
-Then generate {num_briefs} strategic research briefs that outline how {company} can compete with or surpass MoMo in specific areas. Each brief should be a complete, actionable research plan."""
+Then generate {num_strategies} executive exploitation plans that outline how {company} can win over MoMo. Each plan must include: identified weakness (data-backed), exploitation approach, execution steps, expected impact, and success metrics."""
 
 
-COMPETITOR_EXTRACTION_PROMPT_TEMPLATE = """Based on the following competitive analysis from {ceo_name} (CEO of {company}), extract exactly {num_briefs} complete strategic research briefs.
+COMPETITOR_EXTRACTION_PROMPT_TEMPLATE = """Based on the following competitive analysis from {ceo_name} (CEO of {company}), extract exactly {num_strategies} executive exploitation plans.
 
 Competitive Analysis Content:
 {response_content}
 
-Extract the {num_briefs} most strategic and actionable research briefs. Each brief should be COMPLETE and include:
-- Clear research objective: "How can {company} [specific competitive action]?"
-- Background context: What MoMo weakness or market gap are we exploiting?
-- Specific investigation areas: What data, trends, partnerships to research?
-- Expected strategic insights: What decisions will this research enable?
-- Success metrics: How will we measure if this strategy works?
-- Be ready for deep research teams to investigate immediately
-- Focus on competitive advantage and market share capture
+Extract the {num_strategies} most strategic and comprehensive exploitation plans. Each plan MUST include:
+- **Identified Weakness**: Specific MoMo weakness discovered (with data/metrics)
+- **Exploitation Approach**: How {company} will exploit this weakness
+- **Execution Steps**: 3-5 concrete action steps
+- **Expected Impact**: Quantifiable outcomes (user %, market share %, revenue)
+- **Success Metrics**: How to measure success
 
-Return exactly {num_briefs} complete research briefs."""
+These are executive-level plans ready for board review and Mr Tường's defensive response. Return exactly {num_strategies} complete exploitation plans."""

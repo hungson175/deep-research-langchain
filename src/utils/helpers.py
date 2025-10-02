@@ -19,7 +19,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool, InjectedToolArg
 from tavily import TavilyClient
 
-from .prompts import summarize_webpage_prompt
+from ..prompts.system_prompts import summarize_webpage_prompt
 from .config import (
     SUMMARIZATION_MODEL,
     SUMMARIZATION_TEMPERATURE,

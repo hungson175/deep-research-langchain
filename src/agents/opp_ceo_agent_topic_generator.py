@@ -7,9 +7,9 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-from .utils import get_today_str, tavily_search, think_tool, console, init_xai_model
+from ..utils.helpers import get_today_str, tavily_search, think_tool, console, init_xai_model
 from .supervisor import query_momo_data  # Import from supervisor instead of duplicating
-from .persona_prompts import (
+from ..prompts.persona_prompts import (
     ZALOPAY_CEO_PERSONA,
     VNPAY_CEO_PERSONA,
     get_competitor_ceo_prompt,
@@ -18,7 +18,7 @@ from .persona_prompts import (
 )
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from .config import BOSS_MODEL, BOSS_TEMPERATURE
+from ..utils.config import BOSS_MODEL, BOSS_TEMPERATURE
 from pydantic import BaseModel, Field
 from typing import List, Literal
 from datetime import datetime
@@ -29,17 +29,17 @@ from pathlib import Path
 # ============================================================================
 
 CEO_TYPE: Literal["zalopay", "vnpay"] = "zalopay"  # Change to "zalopay" or "vnpay"
-NUM_BRIEFS = 3  # Number of competitive research briefs to generate
+NUM_STRATEGIES = 3  # Number of attack strategies to generate
 MAX_ITERATIONS = 6  # Maximum research iterations
 
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
 
-class CompetitiveResearchBriefs(BaseModel):
-    """Schema for extracting competitive research briefs from CEO analysis."""
-    briefs: List[str] = Field(
-        description="List of complete strategic research briefs outlining how to compete with or surpass MoMo. Each brief includes: research objective, background context, investigation areas, expected insights, and success metrics.",
+class AttackStrategies(BaseModel):
+    """Schema for extracting attack strategies from CEO competitive analysis."""
+    strategies: List[str] = Field(
+        description="List of executive attack plans to exploit MoMo's weaknesses. Each plan is a comprehensive strategy including: identified weakness, exploitation approach, execution steps, expected impact, and success metrics.",
         min_items=1
     )
 
@@ -88,15 +88,15 @@ class OpponentCEOTopicGenerator:
         self.model_with_tools = self.model.bind_tools(self.tools)
         self.max_tool_call_iterations = max_tool_call_iterations
 
-        # Initialize structured output model for brief extraction
-        self.structured_output_model = self.model.with_structured_output(CompetitiveResearchBriefs)
+        # Initialize structured output model for attack strategy extraction
+        self.structured_output_model = self.model.with_structured_output(AttackStrategies)
 
         console.print(f"[dim]CEO: {persona['name']} ({persona['company']})[/dim]")
         console.print(f"[dim]Using model: {BOSS_MODEL}[/dim]")
         console.print(f"[dim]Max iterations: {max_tool_call_iterations}[/dim]")
 
         self.tools_by_name = {tool.name: tool for tool in self.tools}
-        self.generated_briefs = []
+        self.generated_strategies = []
 
     def _log(self, message: str, level: str = "INFO"):
         """Add log entry if debug logging is enabled."""
@@ -118,29 +118,29 @@ class OpponentCEOTopicGenerator:
                     f.write(f"{entry}\n\n")
             console.print(f"[green]📝 Debug log written to: {self.log_file_path}[/green]")
 
-    async def generate_competitive_briefs(self, num_briefs: int = 3) -> List[str]:
-        """Generate strategic research briefs for competing with MoMo.
+    async def generate_attack_strategies(self, num_strategies: int = NUM_STRATEGIES) -> List[str]:
+        """Generate executive attack plans to exploit MoMo's weaknesses.
 
         Args:
-            num_briefs: Number of research briefs to generate (default: 3)
+            num_strategies: Number of attack strategies to generate (default: NUM_STRATEGIES config)
 
         Returns:
-            List of complete research briefs for competing with MoMo
+            List of executive attack plans to win over MoMo
         """
         console.print(Panel(
-            f"[bold red]⚔️ {self.persona['name']} Analyzing MoMo for Competitive Advantages[/bold red]\n"
+            f"[bold red]⚔️ {self.persona['name']} Analyzing MoMo for Attack Strategies[/bold red]\n"
             f"Company: {self.persona['company']}\n"
-            f"Target: Generate {num_briefs} strategic attack plans",
+            f"Target: Generate {num_strategies} executive exploitation plans",
             border_style="red"
         ))
 
         # Create system message with CEO persona
-        system_prompt = get_competitor_ceo_prompt(self.ceo_type, num_briefs, get_today_str())
+        system_prompt = get_competitor_ceo_prompt(self.ceo_type, num_strategies, get_today_str())
 
         # Initialize messages
         user_message = COMPETITOR_USER_MESSAGE_TEMPLATE.format(
             company=self.persona['company'],
-            num_briefs=num_briefs
+            num_strategies=num_strategies
         )
         messages = [
             {"role": "system", "content": system_prompt},
@@ -148,7 +148,7 @@ class OpponentCEOTopicGenerator:
         ]
 
         console.print(f"[dim]{self.persona['name']} starting competitive intelligence gathering...[/dim]")
-        self._log(f"Starting competitive intelligence gathering for {num_briefs} briefs")
+        self._log(f"Starting competitive intelligence gathering for {num_strategies} executive exploitation plans")
         self._log(f"System prompt: {system_prompt[:200]}...")
 
         response = await self.model_with_tools.ainvoke(messages)
@@ -209,91 +209,91 @@ class OpponentCEOTopicGenerator:
             messages.append({"role": "assistant", "content": response.content, "tool_calls": response.tool_calls or []})
             self._log(f"Model response (length: {len(str(response.content))} chars): {str(response.content)[:500]}...")
 
-        # Extract final briefs using structured output
+        # Extract final attack strategies using structured output
         final_content = str(response.content)
         console.print(Panel(
             f"[bold red]⚔️ {self.persona['name']} Competitive Analysis Complete[/bold red]\n\n{final_content}",
             border_style="red"
         ))
 
-        # Extract briefs using structured output
-        self._log("Extracting competitive research briefs...")
-        briefs = await self._extract_briefs_from_response(final_content, num_briefs)
-        self.generated_briefs = briefs
-        self._log(f"Successfully extracted {len(briefs)} briefs")
+        # Extract executive exploitation plans using structured output
+        self._log("Extracting executive exploitation plans...")
+        strategies = await self._extract_strategies_from_response(final_content, num_strategies)
+        self.generated_strategies = strategies
+        self._log(f"Successfully extracted {len(strategies)} executive exploitation plans")
 
         # Save to file
-        self._save_briefs_to_file(briefs)
+        self._save_strategies_to_file(strategies)
 
         # Write debug log if enabled
         self._write_log_file()
 
-        return briefs
+        return strategies
 
-    async def _extract_briefs_from_response(self, response_content: str, num_briefs: int) -> List[str]:
-        """Extract strategic research briefs from the model's response using structured output."""
-        console.print("[yellow]📝 Extracting competitive research briefs using structured output...[/yellow]")
+    async def _extract_strategies_from_response(self, response_content: str, num_strategies: int) -> List[str]:
+        """Extract executive exploitation plans from the model's response using structured output."""
+        console.print("[yellow]📝 Extracting executive exploitation plans using structured output...[/yellow]")
 
         extraction_prompt = COMPETITOR_EXTRACTION_PROMPT_TEMPLATE.format(
             ceo_name=self.persona['name'],
             company=self.persona['company'],
-            num_briefs=num_briefs,
+            num_strategies=num_strategies,
             response_content=response_content
         )
 
         try:
-            # Use structured output to extract briefs
+            # Use structured output to extract strategies
             structured_response = await self.structured_output_model.ainvoke([
-                {"role": "system", "content": f"You are an expert at extracting strategic competitive research briefs for {self.persona['company']}."},
+                {"role": "system", "content": f"You are an expert at extracting strategic attack strategies for {self.persona['company']}."},
                 {"role": "user", "content": extraction_prompt}
             ])
 
-            extracted_briefs = structured_response.briefs
-            console.print(f"[green]✅ Extracted {len(extracted_briefs)} competitive research briefs using structured output[/green]")
+            extracted_strategies = structured_response.strategies
+            console.print(f"[green]✅ Extracted {len(extracted_strategies)} executive exploitation plans using structured output[/green]")
 
-            # Ensure we have the right number of briefs
-            if len(extracted_briefs) > num_briefs:
-                extracted_briefs = extracted_briefs[:num_briefs]
-            elif len(extracted_briefs) < num_briefs:
-                console.print(f"[yellow]⚠️ Only extracted {len(extracted_briefs)} briefs, expected {num_briefs}[/yellow]")
+            # Ensure we have the right number of strategies
+            if len(extracted_strategies) > num_strategies:
+                extracted_strategies = extracted_strategies[:num_strategies]
+            elif len(extracted_strategies) < num_strategies:
+                console.print(f"[yellow]⚠️ Only extracted {len(extracted_strategies)} plans, expected {num_strategies}[/yellow]")
 
-            return extracted_briefs
+            return extracted_strategies
 
         except Exception as e:
             console.print(f"[red]❌ Error in structured extraction: {e}[/red]")
             console.print("[yellow]Falling back to simple text parsing...[/yellow]")
 
             # Fallback to simple extraction
-            return self._simple_extract_briefs(response_content)
+            return self._simple_extract_strategies(response_content)
 
-    def _simple_extract_briefs(self, response_content: str) -> List[str]:
-        """Simple fallback method to extract briefs from text."""
+    def _simple_extract_strategies(self, response_content: str) -> List[str]:
+        """Simple fallback method to extract strategies from text."""
         lines = response_content.split('\n')
-        briefs = []
-        current_brief = []
+        strategies = []
+        current_strategy = []
 
         for line in lines:
             line_stripped = line.strip()
-            # Look for brief boundaries
-            if line_stripped and any(line_stripped.startswith(prefix) for prefix in ['1.', '2.', '3.', '4.', '5.', '##', 'Brief']):
-                if current_brief:
-                    briefs.append('\n'.join(current_brief))
-                    current_brief = []
-                current_brief.append(line)
-            elif current_brief:
-                current_brief.append(line)
+            # Look for strategy boundaries
+            if line_stripped and any(line_stripped.startswith(prefix) for prefix in ['1.', '2.', '3.', '4.', '5.', '##', 'Strategy', 'Plan']):
+                if current_strategy:
+                    strategies.append('\n'.join(current_strategy))
+                    current_strategy = []
+                current_strategy.append(line)
+            elif current_strategy:
+                current_strategy.append(line)
 
-        # Add last brief
-        if current_brief:
-            briefs.append('\n'.join(current_brief))
+        # Add last strategy
+        if current_strategy:
+            strategies.append('\n'.join(current_strategy))
 
-        return briefs if briefs else [response_content]
+        return strategies if strategies else [response_content]
 
-    def _save_briefs_to_file(self, briefs: List[str]) -> str:
-        """Save generated research briefs to a markdown file.
+    def _save_strategies_to_file(self, strategies: List[str]) -> str:
+        """Save generated executive exploitation plans to a markdown file.
 
         Args:
-            briefs: List of research briefs
+            strategies: List of executive exploitation plans
 
         Returns:
             Path to the saved file
@@ -302,7 +302,7 @@ class OpponentCEOTopicGenerator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 
         # Create filename
-        filename = f"opponent_{self.ceo_type}_briefs_{timestamp}.md"
+        filename = f"opponent_{self.ceo_type}_attacks_{timestamp}.md"
 
         # Ensure .output directory exists
         output_dir = Path(".output")
@@ -311,24 +311,24 @@ class OpponentCEOTopicGenerator:
         # Full path
         file_path = output_dir / filename
 
-        # Save the briefs
+        # Save the strategies
         with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(f"# Competitive Research Briefs - {self.persona['company']}\n\n")
+            f.write(f"# Executive Exploitation Plans - {self.persona['company']} vs MoMo\n\n")
             f.write(f"**CEO:** {self.persona['name']}\n")
             f.write(f"**Company:** {self.persona['company']}\n")
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
-            f.write(f"**Total Briefs:** {len(briefs)}\n\n")
+            f.write(f"**Total Plans:** {len(strategies)}\n\n")
             f.write("---\n\n")
             f.write(f"## Strategic Mission\n\n")
-            f.write(f"These research briefs outline strategic opportunities for {self.persona['company']} to compete with or surpass MoMo based on competitive intelligence analysis.\n\n")
+            f.write(f"These executive exploitation plans outline how {self.persona['company']} can exploit MoMo's weaknesses to win market share based on competitive intelligence analysis.\n\n")
             f.write("---\n\n")
 
-            for i, brief in enumerate(briefs, 1):
-                f.write(f"## Competitive Research Brief {i}\n\n")
-                f.write(f"{brief}\n\n")
+            for i, strategy in enumerate(strategies, 1):
+                f.write(f"## Exploitation Plan {i}\n\n")
+                f.write(f"{strategy}\n\n")
                 f.write("---\n\n")
 
-        console.print(f"[green]📁 Competitive research briefs saved to: {file_path}[/green]")
+        console.print(f"[green]📁 Executive exploitation plans saved to: {file_path}[/green]")
         return str(file_path)
 
 
@@ -341,7 +341,7 @@ async def main():
 
     Configuration is controlled by constants at the top of this file:
     - CEO_TYPE: "zalopay" or "vnpay"
-    - NUM_BRIEFS: Number of research briefs to generate
+    - NUM_STRATEGIES: Number of exploitation plans to generate
     - MAX_ITERATIONS: Maximum research iterations
     """
     # Get CEO name for display
@@ -349,9 +349,9 @@ async def main():
 
     console.print("[bold]═" * 80 + "[/bold]")
     console.print(Panel(
-        f"[bold red]Opponent CEO Topic Generator - {persona['company']}[/bold red]\n"
-        f"CEO: {persona['name']}\n"
-        f"Briefs: {NUM_BRIEFS} | Iterations: {MAX_ITERATIONS}",
+        f"[bold red]Opponent CEO - Executive Exploitation Plans Generator[/bold red]\n"
+        f"CEO: {persona['name']} ({persona['company']})\n"
+        f"Plans: {NUM_STRATEGIES} | Iterations: {MAX_ITERATIONS}",
         border_style="red"
     ))
     console.print("[bold]═" * 80 + "[/bold]")
@@ -359,20 +359,20 @@ async def main():
     # Initialize agent with configured CEO type (with debug logging enabled)
     console.print(f"\n[bold cyan]Initializing {persona['name']} ({persona['company']}) Agent[/bold cyan]\n")
     agent = OpponentCEOTopicGenerator(ceo_type=CEO_TYPE, max_tool_call_iterations=MAX_ITERATIONS, debug_log=True)
-    briefs = await agent.generate_competitive_briefs(num_briefs=NUM_BRIEFS)
+    strategies = await agent.generate_attack_strategies(num_strategies=NUM_STRATEGIES)
 
     console.print("\n[bold]═" * 80 + "[/bold]")
     console.print(Panel(
-        f"[bold green]✅ {persona['name']} Generated {len(briefs)} Competitive Research Briefs[/bold green]",
+        f"[bold green]✅ {persona['name']} Generated {len(strategies)} Executive Exploitation Plans[/bold green]",
         border_style="green"
     ))
 
-    for i, brief in enumerate(briefs, 1):
-        console.print(f"\n[cyan]Brief {i}:[/cyan]")
-        console.print(f"{brief[:300]}...\n")
+    for i, strategy in enumerate(strategies, 1):
+        console.print(f"\n[cyan]Exploitation Plan {i}:[/cyan]")
+        console.print(f"{strategy[:300]}...\n")
 
-    console.print("\n[dim]These briefs can now be fed to the deep-research system to generate[/dim]")
-    console.print(f"[dim]comprehensive competitive strategy reports for {persona['company']}.[/dim]")
+    console.print("\n[dim]These exploitation plans will be fed to Mr Tường agent to generate[/dim]")
+    console.print(f"[dim]defensive research briefs based on his concerns.[/dim]")
     console.print("[bold]═" * 80 + "[/bold]")
 
 

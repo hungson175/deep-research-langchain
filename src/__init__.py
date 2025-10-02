@@ -1,20 +1,13 @@
-"""
-Deep Research System - Multi-Agent Research Pipeline
+"""Deep Research System - Multi-agent research framework"""
 
-A comprehensive research system using multiple AI agents to conduct
-in-depth research and generate insightful reports.
-"""
-
-from .deep_research_system import DeepResearch
-from .clarifier import ResearchBriefCreator
-from .supervisor import Supervisor
-from .researcher import Researcher
-from .insight_generator import InsightGenerator
+from .core.deep_research_system import DeepResearch
+from .agents.clarifier import ResearchBriefCreator
+from .agents.supervisor import Supervisor
+from .agents.researcher import Researcher
 
 __all__ = [
-    'DeepResearch',
-    'ResearchBriefCreator',
-    'Supervisor',
-    'Researcher',
-    'InsightGenerator'
+    "DeepResearch",
+    "ResearchBriefCreator", 
+    "Supervisor",
+    "Researcher",
 ]

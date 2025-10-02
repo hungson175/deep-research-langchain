@@ -11,8 +11,8 @@ from rich.panel import Panel
 from rich.table import Table
 
 from .topics_generator import TopicsGenerator
-from .deep_research_system import DeepResearch
-from .utils import console
+from ..core.deep_research_system import DeepResearch
+from ..utils.helpers import console
 
 
 class MrWExplorer:

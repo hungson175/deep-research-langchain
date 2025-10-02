@@ -6,7 +6,7 @@ Test script for InsightGenerator using the extracted notes from the MoMo vs comp
 import asyncio
 import json
 from pathlib import Path
-from src.insight_generator import generate_insight_from_notes
+from src.core.insight_generator import generate_insight_from_notes
 
 async def main():
     """Test the insight generator with the extracted notes."""

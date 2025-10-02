@@ -20,7 +20,7 @@ try:
 except ImportError:
     CLAUDE_SDK_AVAILABLE = False
 
-from .utils import console
+from ..utils.helpers import console
 from rich.panel import Panel
 
 

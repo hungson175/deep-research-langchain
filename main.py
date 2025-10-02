@@ -13,7 +13,7 @@ This will run the complete multi-agent research pipeline including:
 """
 
 import asyncio
-from src.deep_research_system import DeepResearch
+from src.core.deep_research_system import DeepResearch
 
 async def main():
     """Run the complete deep research pipeline."""
