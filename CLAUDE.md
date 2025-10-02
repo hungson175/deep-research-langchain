@@ -30,7 +30,7 @@ python -m src.mrw_explorer Q    # Quarterly analysis (3 research briefs)
 python -m src.mrw_explorer Y    # Yearly analysis (5 research briefs)
 
 # Opponent CEO Agent (new) - Competitive intelligence from rival CEOs
-python -m src.opp_ceo_agent_topic_generator  # Demo mode (ZaloPay CEO, 3 briefs)
+python -m src.opp_ceo_agent_topic_generator  # Demo mode (configurable: ZaloPay or VNPay CEO)
 
 # Run individual components for testing
 python -m src.clarifier          # Test clarification phase
@@ -167,9 +167,9 @@ Automated research pipeline that simulates CEO "Nguyễn Mạnh Tường" (MoMo 
 Simulates competitor CEOs (ZaloPay/VNPay) conducting competitive intelligence on MoMo to generate attack strategies.
 
 **Opponent CEO Topic Generator** (`src/opp_ceo_agent_topic_generator.py`)
-- Simulates two CEO personas:
-  - **ZaloPay CEO (Nguyễn Tuấn Anh)**: Leverages Zalo ecosystem (70M+ users), social payments, Gen Z focus
-  - **VNPay CEO (Lê Hồng Minh)**: Leverages 40+ banking partnerships, merchant network, enterprise solutions
+- Simulates two CEO personas (configurable via CEO_TYPE constant):
+  - **ZaloPay CEO (Chi Le)**: Leverages Zalo ecosystem (100M+ users), social payments, Gen Z focus
+  - **VNPay CEO (Lê Tánh)**: Leverages 40+ banking partnerships, merchant network, enterprise solutions
 - Uses THREE tools for competitive intelligence:
   - `query_momo_data`: Analyzes MoMo's internal metrics (GMV, users, products) to find weaknesses
   - `tavily_search`: Researches public market trends, competitor moves, customer sentiment
@@ -207,8 +207,8 @@ Simulates competitor CEOs (ZaloPay/VNPay) conducting competitive intelligence on
   - `utils.py` - Helpers and cache strategies (~159 lines)
 - **Visual Logging**: Rich library provides beautiful console output with progress tracking
 - **Models Used** (configurable in `src/config.py`):
+  - Boss Model (all CEO personas): `BOSS_MODEL = grok-4-fast-reasoning` (0.0 temp)
   - Clarifier: `grok-4-fast` (0.0 temp)
-  - Topics/Question Generator (MrT): `grok-4-fast-reasoning` (0.0 temp)
   - Supervisor: `grok-4-fast-reasoning` (0.0 temp)
   - Researcher: `grok-4-fast` (0.0 temp, 4 iterations)
   - Summarization: `grok-4-fast` (0.0 temp)
@@ -232,18 +232,24 @@ The system requires the following API keys in `.env`:
 - **Do NOT test LLM-related code** without explicit instruction - API calls are expensive
 - The system uses async/await throughout - all main functions are coroutines
 - **Research iteration limits** (configurable in `src/config.py`):
-  - Supervisor: 6 iterations
-  - Each Researcher: 4 iterations
-  - Question Generator: 3 iterations
-  - Topics Generator: 5 iterations
-- **Concurrent researchers**: Up to 5 can be launched in parallel (was 3, now configurable)
+  - Supervisor: 6 iterations (`SUPERVISOR_MAX_RESEARCHER_ITERATIONS`)
+  - Each Researcher: 4 iterations (`RESEARCHER_MAX_TOOL_CALL_ITERATIONS`)
+  - Question Generator: 3 iterations (`QUESTION_GENERATOR_MAX_TOOL_CALL_ITERATIONS`)
+  - Topics Generator: 5 iterations (hardcoded in MrW Explorer)
+  - Opponent CEO Agent: 6 iterations (default in agent initialization)
+- **Concurrent researchers**: Up to 5 can be launched in parallel (`SUPERVISOR_MAX_CONCURRENT_RESEARCHERS`)
 - **Reports**: Automatically saved with descriptive filenames based on user input
   - Research reports: `./reports/{description}_{timestamp}.md`
   - Insight pages: `./reports/htmls/insights_{description}_{timestamp}.html`
   - MrT topics: `.output/mrT_topics_{timestamp}.md`
+  - Opponent CEO briefs: `.output/opponent_{ceo_type}_briefs_{timestamp}.md`
 - **Educational version**: `educational_no_logging/` has identical logic but cleaner presentation
 - **Insight generation**: Uses `permission_mode='acceptAll'` to allow Claude full access to all tools
 - **Performance tracking**: Automatically tracks time and token usage for each phase with summary table
 - **Timeout configuration**: All LLM requests use 240 seconds to prevent timeouts during long operations
 - **MrT Pipeline**: The `mrw_explorer` runs research **sequentially** (not parallel) to avoid overwhelming the system
-- **Opponent CEO Agent**: Uses MirMir tool to analyze MoMo's internal data for competitive intelligence - requires MirMir API server running on localhost:8001
+- **Opponent CEO Agent**:
+  - Uses MirMir tool (`query_momo_data`) to analyze MoMo's internal data for competitive intelligence
+  - Requires MirMir API server running on `localhost:8001` (configurable via `MIRMIR_API_SERVER_BASE_URL`)
+  - Configurable via `CEO_TYPE` constant in `src/opp_ceo_agent_topic_generator.py` (line 31)
+  - Debug logging option available via `debug_log` parameter (saves to `.output/logs/`)
