@@ -24,7 +24,6 @@ class MrWExplorer:
             border_style="magenta"
         ))
         self.topics_generator = None
-        self.deep_research = None
         self.results = []
 
     async def run_pipeline(
@@ -67,8 +66,6 @@ class MrWExplorer:
         ))
         console.print("[bold]═" * 80 + "[/bold]\n")
 
-        self.deep_research = DeepResearch()
-
         for idx, research_brief in enumerate(research_briefs, 1):
             console.print(f"\n[bold cyan]{'━' * 80}[/bold cyan]")
             console.print(Panel(
@@ -78,12 +75,15 @@ class MrWExplorer:
             console.print(f"[cyan]Brief Preview:[/cyan] {research_brief[:200]}...\n")
 
             try:
+                # Create fresh DeepResearch instance for each topic to avoid state issues
+                deep_research = DeepResearch()
+
                 # Generate short description from brief for filename
                 brief_title = research_brief.split('\n')[0][:50].strip()
                 user_input = f"MrT_Topic_{idx}_{brief_title}"
 
                 # Run deep research with clarifier skipped
-                report = await self.deep_research.run(
+                report = await deep_research.run(
                     user_input=user_input,
                     skip_clarifier=True,
                     research_brief=research_brief,

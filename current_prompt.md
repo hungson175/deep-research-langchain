@@ -1,5 +1,3 @@
-Problems:
-1. Why hard-code 3 ? it's should be a variable
-2. Why "17 +  • Each strategy should be:
-       218 +    - Clear and actionable (2-4 sentences max)" 
-   I need a executive plan to exploit weakness the opponent's CEO saw
+Can phai fix:
+- "Refactor" lai cac prompt ve anh Tuong: group vao cung mot cho cho de quan ly, thong tin background dung chung thi dung co duplicated 
+- Sau do test: doc attack strategies tu '/Users/sonph36/dev/deep_research_mrW/deep_research_langchain/.output/opponent_zalopay_attacks_20251002_1759.md' , roi sau do input vao Mr Tuong de test - chay task nay o background va log ra file test.log de toi co the theo doi live 

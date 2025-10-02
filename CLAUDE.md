@@ -22,23 +22,27 @@ python main.py
 # Or run the core system directly
 python -m src.deep_research_system
 
-# MrT Generator Pipeline (new) - Automated topic generation + research
-python -m src.mrw_explorer D    # Daily analysis (1 research brief)
-python -m src.mrw_explorer W    # Weekly analysis (1 research brief)
-python -m src.mrw_explorer M    # Monthly analysis (3 research briefs)
-python -m src.mrw_explorer Q    # Quarterly analysis (3 research briefs)
-python -m src.mrw_explorer Y    # Yearly analysis (5 research briefs)
+# MrW Explorer Pipeline - Automated topic generation + sequential deep research
+python -m src.agents.mrw_explorer D    # Daily analysis (1 research brief)
+python -m src.agents.mrw_explorer W    # Weekly analysis (1 research brief)
+python -m src.agents.mrw_explorer M    # Monthly analysis (3 research briefs)
+python -m src.agents.mrw_explorer Q    # Quarterly analysis (3 research briefs)
+python -m src.agents.mrw_explorer Y    # Yearly analysis (5 research briefs)
 
-# Opponent CEO Agent (new) - Competitive intelligence from rival CEOs
-python -m src.opp_ceo_agent_topic_generator  # Demo mode (configurable: ZaloPay or VNPay CEO)
+# Opponent CEO Agent - Competitive intelligence from rival CEOs
+python -m src.agents.opp_ceo_agent_topic_generator  # Demo mode (configurable: ZaloPay or VNPay CEO)
+
+# Mr Tường Defensive Agent - Generate defensive strategy against opponent attacks
+python -m src.agents.mrt_defensive_agent  # Demo mode (reads latest opponent attacks)
 
 # Run individual components for testing
-python -m src.clarifier          # Test clarification phase
-python -m src.supervisor         # Test supervisor coordination
-python -m src.researcher         # Test individual researcher
-python -m src.topics_generator   # Test MrT topic generation (generates research briefs)
-python -m src.question_generator # Test MrT question generation (generates strategic questions)
-python -m src.opp_ceo_agent_topic_generator  # Test opponent CEO (ZaloPay/VNPay)
+python -m src.agents.clarifier          # Test clarification phase
+python -m src.agents.supervisor         # Test supervisor coordination
+python -m src.agents.researcher         # Test individual researcher
+python -m src.agents.topics_generator   # Test MrT topic generation (generates research briefs)
+python -m src.agents.question_generator # Test MrT question generation (generates strategic questions)
+python -m src.agents.opp_ceo_agent_topic_generator  # Test opponent CEO (ZaloPay/VNPay)
+python -m src.agents.mrt_defensive_agent  # Test Mr Tường defensive agent
 
 # Run tests
 python -m pytest tests/   # Run all tests
@@ -68,19 +72,25 @@ deep_research_langchain/
 ├── main.py                     # Main entry point for the system
 ├── src/                        # Core application modules
 │   ├── __init__.py            # Package initialization
-│   ├── cache_strategy.py      # LLM caching strategies
-│   ├── clarifier.py           # Research brief creation
-│   ├── config.py              # Configuration and settings
-│   ├── deep_research_system.py # Main orchestration system
-│   ├── insight_generator.py   # HTML insight page generation
-│   ├── prompts.py             # All system prompts
-│   ├── researcher.py          # Individual research agent
-│   ├── supervisor.py          # Multi-agent coordination
-│   ├── utils.py               # Helper functions and tools
-│   ├── topics_generator.py    # MrT persona: generates research briefs from market trends
-│   ├── question_generator.py  # MrT persona: generates strategic questions from topics
-│   ├── mrw_explorer.py        # Automated pipeline: topics → sequential deep research
-│   └── opp_ceo_agent_topic_generator.py  # Opponent CEOs: ZaloPay/VNPay competitive intelligence
+│   ├── agents/                # AI agent implementations
+│   │   ├── clarifier.py           # Research brief creation
+│   │   ├── researcher.py          # Individual research agent
+│   │   ├── supervisor.py          # Multi-agent coordination
+│   │   ├── topics_generator.py    # MrT persona: generates research briefs from market trends
+│   │   ├── question_generator.py  # MrT persona: generates strategic questions from topics
+│   │   ├── mrw_explorer.py        # Automated pipeline: topics → sequential deep research
+│   │   ├── opp_ceo_agent_topic_generator.py  # Opponent CEOs: ZaloPay/VNPay competitive intelligence
+│   │   └── mrt_defensive_agent.py # Mr Tường: defensive strategy against opponent attacks
+│   ├── core/                  # Core orchestration systems
+│   │   ├── deep_research_system.py # Main orchestration system
+│   │   └── insight_generator.py   # HTML insight page generation
+│   ├── prompts/               # All system prompts
+│   │   ├── system_prompts.py     # Core system prompts
+│   │   └── persona_prompts.py    # CEO persona prompts (MrT, ZaloPay, VNPay)
+│   └── utils/                 # Utilities and helpers
+│       ├── helpers.py            # Helper functions and tools
+│       ├── cache_strategy.py     # LLM caching strategies
+│       └── config.py             # Configuration and settings
 ├── tests/                     # Test files
 │   ├── simple_test.py         # Simple integration test
 │   └── test_insight_generator.py # Insight generator tests
@@ -96,9 +106,11 @@ deep_research_langchain/
 │   ├── .gitignore            # Ignore all content except this file
 │   ├── htmls/                # HTML insight pages
 │   └── spas/                 # Single-page applications
-├── .output/                   # MrT generated topics (gitignored)
+├── .output/                   # Agent-generated outputs (gitignored)
 │   ├── mrT_topics_*.md       # Timestamped MrT research briefs
-│   └── opponent_{ceo_type}_briefs_*.md  # Timestamped opponent CEO briefs
+│   ├── opponent_{ceo_type}_attacks_*.md  # Timestamped opponent CEO attack strategies
+│   ├── mrt_defensive_vs_{opponent}_*.md  # Timestamped Mr Tường defensive briefs
+│   └── logs/                 # Debug logs (if enabled)
 ├── sample_codes/              # Reference code (not part of main system)
 ├── .env.example              # Environment variables template
 ├── requirements.txt          # Python dependencies
@@ -111,24 +123,24 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 
 ### Core Research Pipeline (4 phases)
 
-**Phase 1: Clarification** (`src/clarifier.py`)
+**Phase 1: Clarification** (`src/agents/clarifier.py`)
 - `ResearchBriefCreator` class interacts with users to clarify research intent
 - Transforms user input into structured research briefs
 - Can be skipped when using MrT-generated briefs
 
-**Phase 2: Supervised Research** (`src/supervisor.py`)
+**Phase 2: Supervised Research** (`src/agents/supervisor.py`)
 - `Supervisor` coordinates multiple parallel research agents
 - Uses lead researcher prompt to plan and delegate tasks
 - Launches up to 5 concurrent `Researcher` agents (configurable)
 - Each researcher has 4 iterations using Tavily search + think tool
 
-**Phase 3: Report Generation** (`src/deep_research_system.py`)
+**Phase 3: Report Generation** (`src/core/deep_research_system.py`)
 - `DeepResearch` orchestrates the entire pipeline
 - Collects research notes from all agents
 - Generates comprehensive final report
 - Automatically saves to `./reports/` with timestamp-based filenames
 
-**Phase 4: Insight Page Generation** (`src/insight_generator.py`)
+**Phase 4: Insight Page Generation** (`src/core/insight_generator.py`)
 - `InsightGenerator` creates interactive HTML insight pages
 - Generates concise 2-4 page visual summaries with charts/tabs
 - Uses Claude Code SDK (optional dependency)
@@ -138,7 +150,7 @@ This is a multi-agent deep research system built with LangChain (without LangGra
 
 Automated research pipeline that simulates CEO "Nguyễn Mạnh Tường" (MoMo CEO) to generate strategic research topics and execute research autonomously.
 
-**MrT Topics Generator** (`src/topics_generator.py`)
+**MrT Topics Generator** (`src/agents/topics_generator.py`)
 - Simulates MrT persona analyzing market trends and news
 - Searches current developments (fintech, digital banking, regulation, competition)
 - Generates complete research briefs based on time period:
@@ -150,23 +162,26 @@ Automated research pipeline that simulates CEO "Nguyễn Mạnh Tường" (MoMo 
 - Each brief includes: research objective, background, investigation areas, expected insights
 - Saves briefs to `.output/mrT_topics_*.md`
 
-**MrT Question Generator** (`src/question_generator.py`)
+**MrT Question Generator** (`src/agents/question_generator.py`)
 - Uses MrT persona to generate strategic questions from topics
 - Focuses on: financial inclusion, innovation, business growth, regulatory impact
 - Uses think tool + Tavily search to research before generating questions
 - Outputs structured questions using Pydantic models
 
-**MrW Explorer** (`src/mrw_explorer.py`)
-- Automated pipeline: generates topics → runs deep research sequentially
+**MrW Explorer** (`src/agents/mrw_explorer.py`)
+- **Automated end-to-end pipeline**: generates topics → runs deep research sequentially
 - Combines `TopicsGenerator` + `DeepResearch`
-- Executes research on each generated brief sequentially (not parallel)
-- Displays summary table of all research results
+- **Key feature**: Creates fresh `DeepResearch` instance for each topic to avoid state issues
+- Executes research on each generated brief **sequentially** (NOT parallel for stability)
+- Automatically saves all reports to `./reports/` with numbered filenames
+- Displays comprehensive summary table with success/failure tracking
+- Usage: `python -m src.agents.mrw_explorer [D|W|M|Q|Y]`
 
 ### Opponent CEO Agent (NEW)
 
 Simulates competitor CEOs (ZaloPay/VNPay) conducting competitive intelligence on MoMo to generate attack strategies.
 
-**Opponent CEO Topic Generator** (`src/opp_ceo_agent_topic_generator.py`)
+**Opponent CEO Topic Generator** (`src/agents/opp_ceo_agent_topic_generator.py`)
 - Simulates two CEO personas (configurable via CEO_TYPE constant):
   - **ZaloPay CEO (Chi Le)**: Leverages Zalo ecosystem (100M+ users), social payments, Gen Z focus
   - **VNPay CEO (Lê Tánh)**: Leverages 40+ banking partnerships, merchant network, enterprise solutions
@@ -174,29 +189,38 @@ Simulates competitor CEOs (ZaloPay/VNPay) conducting competitive intelligence on
   - `query_momo_data`: Analyzes MoMo's internal metrics (GMV, users, products) to find weaknesses
   - `tavily_search`: Researches public market trends, competitor moves, customer sentiment
   - `think_tool`: Synthesizes intelligence to identify strategic attack vectors
-- Generates complete research briefs focused on competing with or surpassing MoMo
-- Each brief includes: research objective, MoMo weakness being exploited, investigation areas, expected insights, success metrics
-- Saves briefs to `.output/opponent_{ceo_type}_briefs_*.md`
-- Output briefs are compatible with deep research pipeline for competitive strategy reports
+- Generates **executive exploitation plans** (not just briefs) to attack MoMo's weaknesses
+- Each plan includes: identified weakness (data-backed), exploitation approach, execution steps (3-5), expected impact, success metrics
+- Number of strategies configurable via `NUM_STRATEGIES` constant (default: 3)
+- Saves to `.output/opponent_{ceo_type}_attacks_*.md`
+
+**Mr Tường Defensive Agent** (`src/agents/mrt_defensive_agent.py`)
+- Reads opponent CEO attack strategies as input
+- **NOT one-to-one mapping**: Mr Tường decides how many defensive briefs to create based on strategic concerns
+- Uses `tavily_search` to research market dynamics and `think_tool` for strategic analysis
+- Generates defensive research briefs for deep research system
+- Each brief includes: research objective, strategic context, investigation areas, expected insights
+- Saves to `.output/mrt_defensive_vs_{opponent}_*.md`
+- Complete pipeline: Opponent attacks → Mr Tường defensive briefs → Deep research reports
 
 ## Key Components
 
-- **Cache Strategy**: `src/cache_strategy.py` implements caching for Anthropic models to optimize token usage
+- **Cache Strategy**: `src/utils/cache_strategy.py` implements caching for Anthropic models to optimize token usage
   - `AnthropicCacheStrategy` for Claude models uses prompt caching
   - `StandardCacheStrategy` for other models (no caching)
   - `CacheStrategyFactory` automatically selects appropriate strategy
-- **Prompts**: All system prompts centralized in `src/prompts.py`
-  - Lead researcher prompt (supervisor coordination)
-  - Research brief creation prompts
-  - Final report generation template
-- **Utils**: Helper functions in `src/utils.py` for formatting, logging, and tool management
+- **Prompts**: All system prompts organized in `src/prompts/`
+  - `system_prompts.py`: Lead researcher, clarifier, final report generation prompts
+  - `persona_prompts.py`: CEO persona prompts (MrT, ZaloPay CEO, VNPay CEO, Mr Tường defensive)
+- **Utils**: Helper functions in `src/utils/helpers.py` for formatting, logging, and tool management
   - Tavily search tool wrapper
   - Think tool for researcher reflection
   - Message formatting utilities
+  - xAI model initialization with custom timeout
 - **Reports Directory**: `./reports/` stores saved research reports (gitignored)
   - Auto-generated filenames: `{description}_{YYYYMMDD_HHMM}.md`
   - HTML insight pages: `./reports/htmls/insights_{description}_{YYYYMMDD_HHMM}.html`
-- **Insight Generator**: `src/insight_generator.py` creates interactive HTML summaries (NEW)
+- **Insight Generator**: `src/core/insight_generator.py` creates interactive HTML summaries
   - Extracts key insights from research notes (not final report)
   - Generates 2-4 page visual summaries with charts/tabs
   - Uses Claude Code SDK for HTML generation
