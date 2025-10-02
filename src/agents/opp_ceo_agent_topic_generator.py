@@ -4,11 +4,14 @@ Simulates competitor CEOs analyzing MoMo's weaknesses to generate strategic atta
 """
 
 import asyncio
-from dotenv import load_dotenv
-load_dotenv()
+from typing import List, Literal
+from pydantic import BaseModel, Field
+from pathlib import Path
+from datetime import datetime
 
-from ..utils.helpers import get_today_str, tavily_search, think_tool, console, init_xai_model
-from .supervisor import query_momo_data  # Import from supervisor instead of duplicating
+from .base_ceo_agent import BaseCEOAgent
+from .supervisor import query_momo_data
+from ..utils.helpers import get_today_str, tavily_search, think_tool, console
 from ..prompts.persona_prompts import (
     ZALOPAY_CEO_PERSONA,
     VNPAY_CEO_PERSONA,
@@ -17,20 +20,16 @@ from ..prompts.persona_prompts import (
     COMPETITOR_EXTRACTION_PROMPT_TEMPLATE
 )
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from ..utils.config import BOSS_MODEL, BOSS_TEMPERATURE
-from pydantic import BaseModel, Field
-from typing import List, Literal
-from datetime import datetime
-from pathlib import Path
+
 
 # ============================================================================
-# CONFIGURATION - Change this to switch between CEO agents
+# CONFIGURATION
 # ============================================================================
 
 CEO_TYPE: Literal["zalopay", "vnpay"] = "zalopay"  # Change to "zalopay" or "vnpay"
 NUM_STRATEGIES = 3  # Number of attack strategies to generate
 MAX_ITERATIONS = 6  # Maximum research iterations
+
 
 # ============================================================================
 # PYDANTIC MODELS
@@ -43,11 +42,12 @@ class AttackStrategies(BaseModel):
         min_items=1
     )
 
+
 # ============================================================================
 # MAIN CLASS
 # ============================================================================
 
-class OpponentCEOTopicGenerator:
+class OpponentCEOTopicGenerator(BaseCEOAgent):
     """AI agent simulating competitor CEOs (ZaloPay/VNPay) analyzing MoMo to generate attack strategies."""
 
     def __init__(self, ceo_type: Literal["zalopay", "vnpay"], max_tool_call_iterations: int = 6, debug_log: bool = False):
@@ -55,77 +55,79 @@ class OpponentCEOTopicGenerator:
 
         Args:
             ceo_type: Which CEO to simulate ("zalopay" or "vnpay")
-            max_tool_call_iterations: Max research iterations (default 6 for thorough analysis)
-            debug_log: Enable debug logging of intermediate results (default False)
+            max_tool_call_iterations: Max research iterations (default 6)
+            debug_log: Enable debug logging (default False)
         """
         persona = ZALOPAY_CEO_PERSONA if ceo_type == "zalopay" else VNPAY_CEO_PERSONA
+
         console.print(Panel(
             f"[bold red]⚔️ Initializing Opponent CEO Agent: {persona['name']} ({persona['company']})[/bold red]",
             border_style="red"
         ))
 
         self.ceo_type = ceo_type
-        self.persona = persona
-        self.debug_log = debug_log
-        self.log_entries = []  # Store log entries for writing later
 
-        # Initialize log file path if debug logging is enabled
-        if self.debug_log:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-            log_dir = Path(".output/logs")
-            log_dir.mkdir(parents=True, exist_ok=True)
-            self.log_file_path = log_dir / f"opp_{ceo_type}_briefs_{timestamp}.md"
-            console.print(f"[dim yellow]Debug logging enabled: {self.log_file_path}[/dim yellow]")
-
-        self.model = init_xai_model(
-            model=BOSS_MODEL,
-            temperature=BOSS_TEMPERATURE,
-            max_tokens=12000
+        super().__init__(
+            persona=persona,
+            max_tool_call_iterations=max_tool_call_iterations,
+            tools=[think_tool, tavily_search, query_momo_data],
+            structured_output_schema=AttackStrategies,
+            debug_log=debug_log,
+            agent_type=f"opp_{ceo_type}"
         )
 
-        # Include MirMir tool for internal MoMo data analysis
-        self.tools = [think_tool, tavily_search, query_momo_data]
-        self.model_with_tools = self.model.bind_tools(self.tools)
-        self.max_tool_call_iterations = max_tool_call_iterations
-
-        # Initialize structured output model for attack strategy extraction
-        self.structured_output_model = self.model.with_structured_output(AttackStrategies)
-
         console.print(f"[dim]CEO: {persona['name']} ({persona['company']})[/dim]")
-        console.print(f"[dim]Using model: {BOSS_MODEL}[/dim]")
-        console.print(f"[dim]Max iterations: {max_tool_call_iterations}[/dim]")
 
-        self.tools_by_name = {tool.name: tool for tool in self.tools}
-        self.generated_strategies = []
+    def get_log_title(self) -> str:
+        """Return title for debug log file."""
+        return f"{self.persona['company']} Competitive Intelligence"
 
-    def _log(self, message: str, level: str = "INFO"):
-        """Add log entry if debug logging is enabled."""
-        if self.debug_log:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log_entry = f"[{timestamp}] [{level}] {message}"
-            self.log_entries.append(log_entry)
+    def get_synthesis_message(self) -> str:
+        """Return message to display during synthesis phase."""
+        return f"{self.persona['name']} synthesizing competitive intelligence..."
 
-    def _write_log_file(self):
-        """Write accumulated log entries to file."""
-        if self.debug_log and self.log_entries:
-            with open(self.log_file_path, 'w', encoding='utf-8') as f:
-                f.write(f"# Debug Log - {self.persona['company']} Competitive Intelligence\n\n")
-                f.write(f"**CEO:** {self.persona['name']}\n")
-                f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-                f.write("---\n\n")
-                f.write("## Log Entries\n\n")
-                for entry in self.log_entries:
-                    f.write(f"{entry}\n\n")
-            console.print(f"[green]📝 Debug log written to: {self.log_file_path}[/green]")
+    def _display_tool_call(self, tool_name: str, tool_call: dict):
+        """Override to customize display for opponent CEO."""
+        persona_name = self.persona.get('name', 'Agent')
+
+        if tool_name == "think_tool":
+            console.print(f"[magenta]💭 {persona_name} Thinking: {tool_call['args']['reflection'][:100]}...[/magenta]")
+            self._log(f"THINK: {tool_call['args']['reflection']}")
+        elif tool_name == "tavily_search":
+            console.print(f"[blue]🔍 {persona_name} Searching: \"{tool_call['args']['query']}\"[/blue]")
+            self._log(f"SEARCH QUERY: {tool_call['args']['query']}")
+        elif tool_name == "query_momo_data":
+            console.print(f"[red]🎯 {persona_name} Analyzing MoMo Data: \"{tool_call['args']['query'][:100]}...\"[/red]")
+            self._log(f"MOMO DATA QUERY: {tool_call['args']['query']}", level="QUERY")
+
+    def _log_tool_result(self, tool_name: str, result):
+        """Override to customize result logging for opponent CEO."""
+        if tool_name == "tavily_search":
+            console.print(f"[dim green]✅ Market intelligence gathered[/dim green]")
+            self._log(f"SEARCH RESULT (length: {len(str(result))} chars): {str(result)[:500]}...", level="RESULT")
+        elif tool_name == "query_momo_data":
+            console.print(f"[dim red]✅ MoMo weakness identified[/dim red]")
+            self._log(f"MOMO DATA RESULT:\n{result}", level="MOMO_DATA")
+
+    async def generate(self, num_strategies: int = NUM_STRATEGIES) -> List[str]:
+        """Generate executive attack plans to exploit MoMo's weaknesses.
+
+        Args:
+            num_strategies: Number of attack strategies to generate (default: NUM_STRATEGIES)
+
+        Returns:
+            List of executive attack plans
+        """
+        return await self.generate_attack_strategies(num_strategies)
 
     async def generate_attack_strategies(self, num_strategies: int = NUM_STRATEGIES) -> List[str]:
         """Generate executive attack plans to exploit MoMo's weaknesses.
 
         Args:
-            num_strategies: Number of attack strategies to generate (default: NUM_STRATEGIES config)
+            num_strategies: Number of attack strategies to generate
 
         Returns:
-            List of executive attack plans to win over MoMo
+            List of executive attack plans
         """
         console.print(Panel(
             f"[bold red]⚔️ {self.persona['name']} Analyzing MoMo for Attack Strategies[/bold red]\n"
@@ -154,72 +156,22 @@ class OpponentCEOTopicGenerator:
         response = await self.model_with_tools.ainvoke(messages)
         messages.append({"role": "assistant", "content": response.content, "tool_calls": response.tool_calls or []})
 
-        tool_call_iterations = 0
+        # Execute tool call loop
+        messages, response = await self._execute_tool_call_loop(
+            messages, response, iteration_label="Intelligence Gathering"
+        )
 
-        while response.tool_calls and tool_call_iterations < self.max_tool_call_iterations:
-            tool_call_iterations += 1
-            console.print(f"\n[cyan]🔄 Intelligence Gathering Iteration {tool_call_iterations}/{self.max_tool_call_iterations}[/cyan]")
-            self._log(f"=== ITERATION {tool_call_iterations}/{self.max_tool_call_iterations} ===")
-
-            observations = []
-            for tool_call in response.tool_calls:
-                tool = self.tools_by_name[tool_call["name"]]
-                tool_name = tool_call["name"]
-
-                if tool_name == "think_tool":
-                    console.print(f"[magenta]💭 {self.persona['name']} Thinking: {tool_call['args']['reflection'][:100]}...[/magenta]")
-                    self._log(f"THINK: {tool_call['args']['reflection']}")
-                elif tool_name == "tavily_search":
-                    console.print(f"[blue]🔍 {self.persona['name']} Searching: \"{tool_call['args']['query']}\"[/blue]")
-                    self._log(f"SEARCH QUERY: {tool_call['args']['query']}")
-                elif tool_name == "query_momo_data":
-                    console.print(f"[red]🎯 {self.persona['name']} Analyzing MoMo Data: \"{tool_call['args']['query'][:100]}...\"[/red]")
-                    self._log(f"MOMO DATA QUERY: {tool_call['args']['query']}", level="QUERY")
-
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console,
-                    transient=True,
-                ) as progress:
-                    task = progress.add_task(f"[cyan]Executing {tool_name}...", total=None)
-                    result = await tool.ainvoke(tool_call["args"])
-                    progress.update(task, completed=True)
-                    observations.append(result)
-
-                # Log tool results
-                if tool_name == "tavily_search":
-                    console.print(f"[dim green]✅ Market intelligence gathered[/dim green]")
-                    self._log(f"SEARCH RESULT (length: {len(str(result))} chars): {str(result)[:500]}...", level="RESULT")
-                elif tool_name == "query_momo_data":
-                    console.print(f"[dim red]✅ MoMo weakness identified[/dim red]")
-                    self._log(f"MOMO DATA RESULT:\n{result}", level="MOMO_DATA")
-
-            # Add tool results to messages
-            for observation, tool_call in zip(observations, response.tool_calls):
-                messages.append({
-                    "role": "tool",
-                    "content": str(observation),
-                    "tool_call_id": tool_call["id"]
-                })
-
-            console.print(f"[dim]{self.persona['name']} synthesizing competitive intelligence...[/dim]")
-            self._log("Synthesizing competitive intelligence...")
-            response = await self.model_with_tools.ainvoke(messages)
-            messages.append({"role": "assistant", "content": response.content, "tool_calls": response.tool_calls or []})
-            self._log(f"Model response (length: {len(str(response.content))} chars): {str(response.content)[:500]}...")
-
-        # Extract final attack strategies using structured output
+        # Extract final strategies
         final_content = str(response.content)
         console.print(Panel(
             f"[bold red]⚔️ {self.persona['name']} Competitive Analysis Complete[/bold red]\n\n{final_content}",
             border_style="red"
         ))
 
-        # Extract executive exploitation plans using structured output
+        # Extract strategies using structured output
         self._log("Extracting executive exploitation plans...")
         strategies = await self._extract_strategies_from_response(final_content, num_strategies)
-        self.generated_strategies = strategies
+        self.generated_outputs = strategies
         self._log(f"Successfully extracted {len(strategies)} executive exploitation plans")
 
         # Save to file
@@ -264,30 +216,8 @@ class OpponentCEOTopicGenerator:
             console.print("[yellow]Falling back to simple text parsing...[/yellow]")
 
             # Fallback to simple extraction
-            return self._simple_extract_strategies(response_content)
-
-    def _simple_extract_strategies(self, response_content: str) -> List[str]:
-        """Simple fallback method to extract strategies from text."""
-        lines = response_content.split('\n')
-        strategies = []
-        current_strategy = []
-
-        for line in lines:
-            line_stripped = line.strip()
-            # Look for strategy boundaries
-            if line_stripped and any(line_stripped.startswith(prefix) for prefix in ['1.', '2.', '3.', '4.', '5.', '##', 'Strategy', 'Plan']):
-                if current_strategy:
-                    strategies.append('\n'.join(current_strategy))
-                    current_strategy = []
-                current_strategy.append(line)
-            elif current_strategy:
-                current_strategy.append(line)
-
-        # Add last strategy
-        if current_strategy:
-            strategies.append('\n'.join(current_strategy))
-
-        return strategies if strategies else [response_content]
+            prefixes = ['1.', '2.', '3.', '4.', '5.', '##', 'Strategy', 'Plan']
+            return self._simple_extract_items(response_content, prefixes)
 
     def _save_strategies_to_file(self, strategies: List[str]) -> str:
         """Save generated executive exploitation plans to a markdown file.
@@ -298,20 +228,13 @@ class OpponentCEOTopicGenerator:
         Returns:
             Path to the saved file
         """
-        # Create timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-
-        # Create filename
         filename = f"opponent_{self.ceo_type}_attacks_{timestamp}.md"
 
-        # Ensure .output directory exists
         output_dir = Path(".output")
         output_dir.mkdir(exist_ok=True)
-
-        # Full path
         file_path = output_dir / filename
 
-        # Save the strategies
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(f"# Executive Exploitation Plans - {self.persona['company']} vs MoMo\n\n")
             f.write(f"**CEO:** {self.persona['name']}\n")
@@ -337,14 +260,7 @@ class OpponentCEOTopicGenerator:
 # ============================================================================
 
 async def main():
-    """Demo function to test opponent CEO agent.
-
-    Configuration is controlled by constants at the top of this file:
-    - CEO_TYPE: "zalopay" or "vnpay"
-    - NUM_STRATEGIES: Number of exploitation plans to generate
-    - MAX_ITERATIONS: Maximum research iterations
-    """
-    # Get CEO name for display
+    """Demo function to test opponent CEO agent."""
     persona = ZALOPAY_CEO_PERSONA if CEO_TYPE == "zalopay" else VNPAY_CEO_PERSONA
 
     console.print("[bold]═" * 80 + "[/bold]")
@@ -356,7 +272,6 @@ async def main():
     ))
     console.print("[bold]═" * 80 + "[/bold]")
 
-    # Initialize agent with configured CEO type (with debug logging enabled)
     console.print(f"\n[bold cyan]Initializing {persona['name']} ({persona['company']}) Agent[/bold cyan]\n")
     agent = OpponentCEOTopicGenerator(ceo_type=CEO_TYPE, max_tool_call_iterations=MAX_ITERATIONS, debug_log=True)
     strategies = await agent.generate_attack_strategies(num_strategies=NUM_STRATEGIES)

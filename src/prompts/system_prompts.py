@@ -512,9 +512,10 @@ final_report_generation_prompt = """Based on all the research conducted, create 
 {research_brief}
 </Research Brief>
 
-CRITICAL: Make sure the answer is written in the same language as the human messages!
-For example, if the user's messages are in English, then MAKE SURE you write your response in English. If the user's messages are in Chinese, then MAKE SURE you write your entire response in Chinese.
-This is critical. The user will only understand the answer if it is written in the same language as their input message.
+CRITICAL: Write the entire final report in VIETNAMESE (Tiếng Việt).
+ALL sections, headings, content, analysis, and conclusions MUST be composed in Vietnamese.
+Do NOT translate - write naturally and directly in Vietnamese as a native speaker would.
+This is an absolute requirement - compose the report in Vietnamese regardless of the research brief language.
 
 Today's date is {date}.
 
@@ -568,8 +569,9 @@ For each section of the report, do the following:
 - Use bullet points to list out information when appropriate, but by default, write in paragraph form.
 
 REMEMBER:
-The brief and research may be in English, but you need to translate this information to the right language when writing the final answer.
-Make sure the final answer report is in the SAME language as the human messages in the message history.
+The brief and research may be in English, but you MUST compose the final report directly in VIETNAMESE.
+Write naturally in Vietnamese (Tiếng Việt) as a native speaker would - do NOT translate mechanically.
+The final report MUST be entirely in Vietnamese - this is non-negotiable.
 
 Format the report in clear markdown with proper structure and include source references where appropriate.
 

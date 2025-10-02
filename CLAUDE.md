@@ -35,6 +35,9 @@ python -m src.agents.opp_ceo_agent_topic_generator  # Demo mode (configurable: Z
 # Mr Tường Defensive Agent - Generate defensive strategy against opponent attacks
 python -m src.agents.mrt_defensive_agent  # Demo mode (reads latest opponent attacks)
 
+# MrT Ranking Agent - Evaluate research reports for strategic value
+python -m src.agents.mrt_ranking_agent  # Demo mode (ranks all reports in reports/)
+
 # Run individual components for testing
 python -m src.agents.clarifier          # Test clarification phase
 python -m src.agents.supervisor         # Test supervisor coordination
@@ -43,6 +46,7 @@ python -m src.agents.topics_generator   # Test MrT topic generation (generates r
 python -m src.agents.question_generator # Test MrT question generation (generates strategic questions)
 python -m src.agents.opp_ceo_agent_topic_generator  # Test opponent CEO (ZaloPay/VNPay)
 python -m src.agents.mrt_defensive_agent  # Test Mr Tường defensive agent
+python -m src.agents.mrt_ranking_agent  # Test MrT ranking agent (evaluates reports 0-10)
 
 # Run tests
 python -m pytest tests/   # Run all tests
@@ -80,7 +84,9 @@ deep_research_langchain/
 │   │   ├── question_generator.py  # MrT persona: generates strategic questions from topics
 │   │   ├── mrw_explorer.py        # Automated pipeline: topics → sequential deep research
 │   │   ├── opp_ceo_agent_topic_generator.py  # Opponent CEOs: ZaloPay/VNPay competitive intelligence
-│   │   └── mrt_defensive_agent.py # Mr Tường: defensive strategy against opponent attacks
+│   │   ├── mrt_defensive_agent.py # Mr Tường: defensive strategy against opponent attacks
+│   │   ├── mrt_ranking_agent.py   # MrT: evaluate research reports 0-10 for strategic value
+│   │   └── base_ceo_agent.py      # Base class for all CEO persona agents
 │   ├── core/                  # Core orchestration systems
 │   │   ├── deep_research_system.py # Main orchestration system
 │   │   └── insight_generator.py   # HTML insight page generation
@@ -110,6 +116,7 @@ deep_research_langchain/
 │   ├── mrT_topics_*.md       # Timestamped MrT research briefs
 │   ├── opponent_{ceo_type}_attacks_*.md  # Timestamped opponent CEO attack strategies
 │   ├── mrt_defensive_vs_{opponent}_*.md  # Timestamped Mr Tường defensive briefs
+│   ├── mrt_rankings_*.md     # Timestamped MrT report rankings (0-10 scores)
 │   └── logs/                 # Debug logs (if enabled)
 ├── sample_codes/              # Reference code (not part of main system)
 ├── .env.example              # Environment variables template
@@ -202,6 +209,19 @@ Simulates competitor CEOs (ZaloPay/VNPay) conducting competitive intelligence on
 - Each brief includes: research objective, strategic context, investigation areas, expected insights
 - Saves to `.output/mrt_defensive_vs_{opponent}_*.md`
 - Complete pipeline: Opponent attacks → Mr Tường defensive briefs → Deep research reports
+
+**MrT Ranking Agent** (`src/agents/mrt_ranking_agent.py`)
+- Evaluates final research reports for strategic value
+- Rates each report 0-10 on five criteria:
+  - Strategic Relevance (0-10): Alignment with MoMo's priorities
+  - Actionability (0-10): Can insights drive business decisions?
+  - Insight Depth (0-10): Non-obvious insights vs surface analysis
+  - Data Quality (0-10): Evidence-backed conclusions
+  - Competitive Advantage (0-10): Edge over competitors
+- Provides justification, strengths, improvements, priority (HIGH/MEDIUM/LOW), and recommended actions
+- Auto-discovers reports in `reports/` directory or accepts specific file paths
+- Saves rankings to `.output/mrt_rankings_*.md` with summary statistics and detailed assessments
+- **NOT a BaseCEOAgent**: Simpler agent for evaluation only (no tool-calling loop needed)
 
 ## Key Components
 

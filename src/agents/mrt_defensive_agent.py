@@ -4,22 +4,21 @@ Reads opponent CEO attack strategies and generates defensive research briefs bas
 """
 
 import asyncio
-from dotenv import load_dotenv
-load_dotenv()
+import glob
+import re
+from typing import List
+from pydantic import BaseModel, Field
+from pathlib import Path
+from datetime import datetime
 
-from ..utils.helpers import get_today_str, tavily_search, think_tool, console, init_xai_model
+from .base_ceo_agent import BaseCEOAgent
+from ..utils.helpers import get_today_str, tavily_search, think_tool, console
 from ..prompts.persona_prompts import (
     MRT_DEFENSIVE_PROMPT,
     MRT_DEFENSIVE_EXTRACTION_PROMPT,
     MRT_DEFENSIVE_PERSONA
 )
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from ..utils.config import BOSS_MODEL, BOSS_TEMPERATURE
-from pydantic import BaseModel, Field
-from typing import List
-from datetime import datetime
-from pathlib import Path
 
 
 # ============================================================================
@@ -38,7 +37,7 @@ class DefensiveResearchBriefs(BaseModel):
 # MAIN CLASS
 # ============================================================================
 
-class MrTuongDefensiveAgent:
+class MrTuongDefensiveAgent(BaseCEOAgent):
     """AI agent simulating Mr Tường (MoMo CEO) analyzing opponent attacks and generating defensive research briefs."""
 
     def __init__(self, max_tool_call_iterations: int = 6, debug_log: bool = False):
@@ -48,61 +47,64 @@ class MrTuongDefensiveAgent:
             max_tool_call_iterations: Max research iterations (default 6)
             debug_log: Enable debug logging (default False)
         """
+        persona = MRT_DEFENSIVE_PERSONA
+
         console.print(Panel(
             "[bold cyan]🛡️ Initializing Mr Tường Defensive Agent (MoMo CEO)[/bold cyan]",
             border_style="cyan"
         ))
 
-        self.debug_log = debug_log
-        self.log_entries = []
-
-        # Initialize log file path if debug logging is enabled
-        if self.debug_log:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-            log_dir = Path(".output/logs")
-            log_dir.mkdir(parents=True, exist_ok=True)
-            self.log_file_path = log_dir / f"mrt_defensive_{timestamp}.md"
-            console.print(f"[dim yellow]Debug logging enabled: {self.log_file_path}[/dim yellow]")
-
-        self.model = init_xai_model(
-            model=BOSS_MODEL,
-            temperature=BOSS_TEMPERATURE,
-            max_tokens=12000
+        super().__init__(
+            persona=persona,
+            max_tool_call_iterations=max_tool_call_iterations,
+            tools=[think_tool, tavily_search],
+            structured_output_schema=DefensiveResearchBriefs,
+            debug_log=debug_log,
+            agent_type="mrt_defensive"
         )
 
-        self.tools = [think_tool, tavily_search]
-        self.model_with_tools = self.model.bind_tools(self.tools)
-        self.max_tool_call_iterations = max_tool_call_iterations
+        console.print(f"[dim]CEO: {persona['name']} ({persona['company']})[/dim]")
 
-        # Initialize structured output model for brief extraction
-        self.structured_output_model = self.model.with_structured_output(DefensiveResearchBriefs)
+    def get_log_title(self) -> str:
+        """Return title for debug log file."""
+        return "Mr Tường Defensive Analysis"
 
-        console.print(f"[dim]CEO: Nguyễn Mạnh Tường (MoMo)[/dim]")
-        console.print(f"[dim]Using model: {BOSS_MODEL}[/dim]")
-        console.print(f"[dim]Max iterations: {max_tool_call_iterations}[/dim]")
+    def get_synthesis_message(self) -> str:
+        """Return message to display during synthesis phase."""
+        return "Mr Tường synthesizing defensive strategy..."
 
-        self.tools_by_name = {tool.name: tool for tool in self.tools}
-        self.generated_briefs = []
+    def _display_tool_call(self, tool_name: str, tool_call: dict):
+        """Override to customize display for Mr Tường."""
+        if tool_name == "think_tool":
+            console.print(f"[magenta]💭 Mr Tường Thinking: {tool_call['args']['reflection'][:100]}...[/magenta]")
+            self._log(f"THINK: {tool_call['args']['reflection']}")
+        elif tool_name == "tavily_search":
+            console.print(f"[blue]🔍 Mr Tường Researching: \"{tool_call['args']['query']}\"[/blue]")
+            self._log(f"SEARCH QUERY: {tool_call['args']['query']}")
 
-    def _log(self, message: str, level: str = "INFO"):
-        """Add log entry if debug logging is enabled."""
-        if self.debug_log:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log_entry = f"[{timestamp}] [{level}] {message}"
-            self.log_entries.append(log_entry)
+    def _log_tool_result(self, tool_name: str, result):
+        """Override to customize result logging for Mr Tường."""
+        if tool_name == "tavily_search":
+            console.print(f"[dim green]✅ Market intelligence gathered[/dim green]")
+            self._log(f"SEARCH RESULT (length: {len(str(result))} chars): {str(result)[:500]}...", level="RESULT")
 
-    def _write_log_file(self):
-        """Write accumulated log entries to file."""
-        if self.debug_log and self.log_entries:
-            with open(self.log_file_path, 'w', encoding='utf-8') as f:
-                f.write(f"# Debug Log - Mr Tường Defensive Analysis\n\n")
-                f.write(f"**CEO:** Nguyễn Mạnh Tường (MoMo)\n")
-                f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-                f.write("---\n\n")
-                f.write("## Log Entries\n\n")
-                for entry in self.log_entries:
-                    f.write(f"{entry}\n\n")
-            console.print(f"[green]📝 Debug log written to: {self.log_file_path}[/green]")
+    async def generate(
+        self,
+        opponent_name: str,
+        attack_strategies: List[str],
+        num_briefs: int = None
+    ) -> List[str]:
+        """Generate defensive research briefs after analyzing opponent's attack strategies.
+
+        Args:
+            opponent_name: Name of opponent CEO/company
+            attack_strategies: List of opponent's attack strategies
+            num_briefs: Number of defensive briefs to generate (optional, Mr Tường decides)
+
+        Returns:
+            List of defensive research briefs
+        """
+        return await self.generate_defensive_briefs(opponent_name, attack_strategies, num_briefs)
 
     async def generate_defensive_briefs(
         self,
@@ -128,15 +130,14 @@ class MrTuongDefensiveAgent:
         ))
 
         # Create system prompt using persona
-        persona = MRT_DEFENSIVE_PERSONA
         system_prompt = MRT_DEFENSIVE_PROMPT.format(
-            name=persona["name"],
-            title=persona["title"],
-            company=persona["company"],
-            background=persona["background"],
-            strategic_position=persona["strategic_position"],
-            leadership_style=persona["leadership_style"],
-            defensive_focus=persona["defensive_focus"],
+            name=self.persona["name"],
+            title=self.persona["title"],
+            company=self.persona["company"],
+            background=self.persona["background"],
+            strategic_position=self.persona["strategic_position"],
+            leadership_style=self.persona["leadership_style"],
+            defensive_focus=self.persona["defensive_focus"],
             opponent_name=opponent_name,
             num_strategies=len(attack_strategies),
             date=get_today_str()
@@ -172,65 +173,22 @@ You decide how many research briefs to create based on the strategic importance 
         response = await self.model_with_tools.ainvoke(messages)
         messages.append({"role": "assistant", "content": response.content, "tool_calls": response.tool_calls or []})
 
-        tool_call_iterations = 0
+        # Execute tool call loop
+        messages, response = await self._execute_tool_call_loop(
+            messages, response, iteration_label="Defensive Analysis"
+        )
 
-        while response.tool_calls and tool_call_iterations < self.max_tool_call_iterations:
-            tool_call_iterations += 1
-            console.print(f"\n[cyan]🔄 Defensive Analysis Iteration {tool_call_iterations}/{self.max_tool_call_iterations}[/cyan]")
-            self._log(f"=== ITERATION {tool_call_iterations}/{self.max_tool_call_iterations} ===")
-
-            observations = []
-            for tool_call in response.tool_calls:
-                tool = self.tools_by_name[tool_call["name"]]
-                tool_name = tool_call["name"]
-
-                if tool_name == "think_tool":
-                    console.print(f"[magenta]💭 Mr Tường Thinking: {tool_call['args']['reflection'][:100]}...[/magenta]")
-                    self._log(f"THINK: {tool_call['args']['reflection']}")
-                elif tool_name == "tavily_search":
-                    console.print(f"[blue]🔍 Mr Tường Researching: \"{tool_call['args']['query']}\"[/blue]")
-                    self._log(f"SEARCH QUERY: {tool_call['args']['query']}")
-
-                with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    console=console,
-                    transient=True,
-                ) as progress:
-                    task = progress.add_task(f"[cyan]Executing {tool_name}...", total=None)
-                    result = await tool.ainvoke(tool_call["args"])
-                    progress.update(task, completed=True)
-                    observations.append(result)
-
-                if tool_name == "tavily_search":
-                    console.print(f"[dim green]✅ Market intelligence gathered[/dim green]")
-                    self._log(f"SEARCH RESULT (length: {len(str(result))} chars): {str(result)[:500]}...", level="RESULT")
-
-            # Add tool results to messages
-            for observation, tool_call in zip(observations, response.tool_calls):
-                messages.append({
-                    "role": "tool",
-                    "content": str(observation),
-                    "tool_call_id": tool_call["id"]
-                })
-
-            console.print(f"[dim]Mr Tường synthesizing defensive strategy...[/dim]")
-            self._log("Synthesizing defensive strategy...")
-            response = await self.model_with_tools.ainvoke(messages)
-            messages.append({"role": "assistant", "content": response.content, "tool_calls": response.tool_calls or []})
-            self._log(f"Model response (length: {len(str(response.content))} chars): {str(response.content)[:500]}...")
-
-        # Extract defensive briefs using structured output
+        # Extract defensive briefs
         final_content = str(response.content)
         console.print(Panel(
             f"[bold cyan]🛡️ Mr Tường Defensive Analysis Complete[/bold cyan]\n\n{final_content}",
             border_style="cyan"
         ))
 
-        # Extract briefs
+        # Extract briefs using structured output
         self._log("Extracting defensive research briefs...")
         briefs = await self._extract_briefs_from_response(final_content, opponent_name)
-        self.generated_briefs = briefs
+        self.generated_outputs = briefs
         self._log(f"Successfully extracted {len(briefs)} defensive research briefs")
 
         # Save to file
@@ -245,11 +203,10 @@ You decide how many research briefs to create based on the strategic importance 
         """Extract defensive research briefs from Mr Tường's response using structured output."""
         console.print("[yellow]📝 Extracting defensive research briefs using structured output...[/yellow]")
 
-        persona = MRT_DEFENSIVE_PERSONA
         extraction_prompt = MRT_DEFENSIVE_EXTRACTION_PROMPT.format(
-            name=persona["name"],
-            title=persona["title"],
-            company=persona["company"],
+            name=self.persona["name"],
+            title=self.persona["title"],
+            company=self.persona["company"],
             opponent_name=opponent_name,
             response_content=response_content
         )
@@ -271,30 +228,8 @@ You decide how many research briefs to create based on the strategic importance 
             console.print("[yellow]Falling back to simple text parsing...[/yellow]")
 
             # Fallback to simple extraction
-            return self._simple_extract_briefs(response_content)
-
-    def _simple_extract_briefs(self, response_content: str) -> List[str]:
-        """Simple fallback method to extract briefs from text."""
-        lines = response_content.split('\n')
-        briefs = []
-        current_brief = []
-
-        for line in lines:
-            line_stripped = line.strip()
-            # Look for brief boundaries
-            if line_stripped and any(line_stripped.startswith(prefix) for prefix in ['1.', '2.', '3.', '4.', '5.', '##', 'Brief', 'Research']):
-                if current_brief:
-                    briefs.append('\n'.join(current_brief))
-                    current_brief = []
-                current_brief.append(line)
-            elif current_brief:
-                current_brief.append(line)
-
-        # Add last brief
-        if current_brief:
-            briefs.append('\n'.join(current_brief))
-
-        return briefs if briefs else [response_content]
+            prefixes = ['1.', '2.', '3.', '4.', '5.', '##', 'Brief', 'Research', 'Defensive']
+            return self._simple_extract_items(response_content, prefixes)
 
     def _save_briefs_to_file(self, briefs: List[str], opponent_name: str) -> str:
         """Save generated defensive research briefs to a markdown file.
@@ -306,24 +241,20 @@ You decide how many research briefs to create based on the strategic importance 
         Returns:
             Path to the saved file
         """
-        # Create timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M")
 
         # Create filename
         opponent_slug = opponent_name.replace(" ", "_").lower()
         filename = f"mrt_defensive_vs_{opponent_slug}_{timestamp}.md"
 
-        # Ensure .output directory exists
         output_dir = Path(".output")
         output_dir.mkdir(exist_ok=True)
-
-        # Full path
         file_path = output_dir / filename
 
         # Save the briefs
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(f"# Mr Tường Defensive Research Briefs\n\n")
-            f.write(f"**CEO:** Nguyễn Mạnh Tường (MoMo)\n")
+            f.write(f"**CEO:** {self.persona['name']}\n")
             f.write(f"**Opponent:** {opponent_name}\n")
             f.write(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
             f.write(f"**Total Briefs:** {len(briefs)}\n\n")
@@ -356,7 +287,6 @@ async def main():
     console.print("[bold]═" * 80 + "[/bold]")
 
     # Example: Read latest opponent attack strategies
-    import glob
     opponent_files = glob.glob(".output/opponent_*_attacks_*.md")
 
     if not opponent_files:
@@ -374,7 +304,6 @@ async def main():
         content = f.read()
 
     # Extract opponent name from file
-    import re
     opponent_match = re.search(r'\*\*Company:\*\* (.+)', content)
     opponent_name = opponent_match.group(1) if opponent_match else "Competitor"
 
