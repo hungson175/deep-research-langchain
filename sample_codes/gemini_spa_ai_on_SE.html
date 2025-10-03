@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tác Động của GenAI đến Kỹ Thuật Phần Mềm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Tech -->
+    <!-- Application Structure Plan: Ứng dụng được cấu trúc theo một luồng tường thuật logic, không theo cấu trúc báo cáo truyền thống, để tối ưu hóa trải nghiệm người dùng. Bắt đầu với một phần tổng quan (hero section) để thu hút sự chú ý với các số liệu chính. Sau đó, một thanh điều hướng cố định cho phép người dùng chuyển đến các phần chuyên sâu: 'Tổng Quan' về bối cảnh, 'Tác Động Chính' phân tích theo từng giai đoạn của vòng đời phát triển phần mềm (SDLC) thông qua các tab tương tác, 'Thách Thức' trình bày các rủi ro một cách cân bằng qua các thẻ có thể nhấp, và 'Tương Lai' phác họa viễn cảnh tiến hóa của ngành. Cấu trúc này cho phép người dùng khám phá thông tin một cách tự do, từ tổng thể đến chi tiết, thay vì bị buộc vào một trình tự tuyến tính, qua đó tăng cường sự tương tác và khả năng tiếp thu kiến thức. -->
+    <!-- Visualization & Content Choices: 1. Tỷ lệ chấp nhận (Tổng quan) -> Goal: Change -> Viz: Biểu đồ cột (Bar Chart) -> Interaction: Hover để xem chi tiết -> Justification: Hiển thị sự tăng trưởng theo thời gian một cách trực quan -> Library: Chart.js. 2. Phân tích năng suất (Tác động) -> Goal: Compare/Inform -> Viz: Biểu đồ tròn (Doughnut Chart) -> Interaction: Hover để xem tỷ lệ % -> Justification: Cho thấy sự phân bổ thời gian được tiết kiệm vào các tác vụ khác nhau -> Library: Chart.js. 3. Vòng đời phát triển (Tác động) -> Goal: Organize -> Presentation: Các tab tương tác (Interactive Tabs) -> Interaction: Click để chuyển đổi nội dung -> Justification: Phân loại và trình bày thông tin phức tạp một cách gọn gàng, cho phép người dùng tập trung vào từng khía cạnh -> Method: HTML/CSS/JS. 4. Thách thức (Thách thức) -> Goal: Organize -> Presentation: Lưới các thẻ (Card Grid) -> Interaction: Click để xem chi tiết -> Justification: Giữ giao diện ban đầu sạch sẽ và khuyến khích người dùng khám phá từng thách thức -> Method: HTML/CSS/JS. 5. Dòng thời gian tiến hóa (Tương lai) -> Goal: Change -> Presentation: Sơ đồ dòng thời gian ngang -> Interaction: Click để làm nổi bật giai đoạn -> Justification: Trực quan hóa quá trình phát triển của ngành một cách đơn giản và dễ hiểu -> Method: HTML/CSS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #FDFBF8;
+            color: #1a202c;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .tab.active {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-lg shadow-sm">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="text-xl font-bold text-gray-800">GenAI & SE</div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="nav-link pb-1">Tổng Quan</a>
+                    <a href="#impact" class="nav-link pb-1">Tác Động Chính</a>
+                    <a href="#challenges" class="nav-link pb-1">Thách Thức</a>
+                    <a href="#future" class="nav-link pb-1">Tương Lai</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="hero" class="text-center py-16">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-gray-900 mb-4">
+                GenAI: Tái Định Hình Ngành <span class="text-blue-600">Kỹ Thuật Phần Mềm</span>
+            </h1>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                Trí tuệ nhân tạo tạo sinh (Generative AI) không còn là khái niệm tương lai. Nó đang trở thành một trợ lý đắc lực, thay đổi sâu sắc cách chúng ta thiết kế, xây dựng và duy trì phần mềm.
+            </p>
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                    <p class="text-4xl font-bold text-blue-600">55%</p>
+                    <p class="mt-2 text-gray-600 font-medium">Tăng năng suất lập trình</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                    <p class="text-4xl font-bold text-blue-600">75%</p>
+                    <p class="mt-2 text-gray-600 font-medium">Nhà phát triển sử dụng công cụ AI</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                    <p class="text-4xl font-bold text-blue-600">>10x</p>
+                    <p class="mt-2 text-gray-600 font-medium">Tốc độ tạo bản mẫu (prototyping)</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="overview" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Bức Tranh Toàn Cảnh</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                Sự trỗi dậy của GenAI đánh dấu một bước ngoặt trong ngành công nghệ. Đối với kỹ thuật phần mềm, đây là một cuộc cách mạng về công cụ và tư duy, giúp tự động hóa các tác vụ lặp đi lặp lại và giải phóng sức sáng tạo của con người. Phần này sẽ cung cấp bối cảnh về sự phổ biến và những số liệu ấn tượng ban đầu của GenAI.
+            </p>
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                <h3 class="text-xl font-semibold text-center mb-6">Tỷ Lệ Lập Trình Viên Sử Dụng Công Cụ AI Hỗ Trợ (2022-2025)</h3>
+                 <div class="chart-container h-80 md:h-96 max-w-3xl">
+                    <canvas id="adoptionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Tác Động Lên Vòng Đời Phát Triển</h2>
+             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                GenAI không chỉ tác động đến việc viết code mà còn ảnh hưởng đến toàn bộ vòng đời phát triển phần mềm (SDLC), từ khâu lên ý tưởng, thiết kế, kiểm thử cho đến triển khai và bảo trì. Hãy khám phá chi tiết tác động của nó qua từng giai đoạn cụ thể bằng cách chọn các tab bên dưới.
+            </p>
+            <div class="flex justify-center mb-8 space-x-2 md:space-x-4 bg-gray-100 p-2 rounded-xl max-w-xl mx-auto">
+                <button class="tab active flex-1 py-2 px-4 rounded-lg font-semibold transition" data-target="coding">Lập Trình</button>
+                <button class="tab flex-1 py-2 px-4 rounded-lg font-semibold transition" data-target="testing">Kiểm Thử</button>
+                <button class="tab flex-1 py-2 px-4 rounded-lg font-semibold transition" data-target="design">Thiết Kế</button>
+                <button class="tab flex-1 py-2 px-4 rounded-lg font-semibold transition" data-target="optimization">Tối Ưu Hóa</button>
+            </div>
+            <div id="impact-content" class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 min-h-[450px]">
+                <div class="tab-content fade-in" id="coding">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-blue-600 mb-4">Tăng Tốc Viết Code và Gỡ Lỗi</h3>
+                            <p class="text-gray-700 mb-4">Các công cụ như GitHub Copilot hay Amazon CodeWhisperer có khả năng gợi ý code, hoàn thành các hàm, thậm chí viết toàn bộ các khối logic phức tạp. Điều này giúp giảm đáng kể thời gian cho các tác vụ lặp lại và cho phép lập trình viên tập trung vào các vấn đề kiến trúc khó hơn.</p>
+                             <ul class="space-y-2 list-disc list-inside text-gray-600">
+                                <li>Tự động tạo mã boilerplate.</li>
+                                <li>Chuyển đổi ngôn ngữ lập trình.</li>
+                                <li>Phân tích và đề xuất sửa lỗi.</li>
+                                <li>Tự động viết tài liệu cho hàm (docstrings).</li>
+                            </ul>
+                        </div>
+                        <div class="chart-container h-72 md:h-80 max-w-sm">
+                            <canvas id="productivityChart"></canvas>
+                            <p class="text-center text-sm text-gray-500 mt-2">Phân bổ thời gian tiết kiệm được</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content hidden fade-in" id="testing">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-4">Tự Động Hóa Kiểm Thử Thông Minh</h3>
+                    <p class="text-gray-700">GenAI có thể tự động tạo ra các bộ kiểm thử (test cases) đa dạng, bao gồm cả các trường hợp biên (edge cases) mà con người có thể bỏ sót. Nó giúp tăng độ bao phủ của kiểm thử và phát hiện lỗi sớm hơn trong quy trình phát triển, giảm chi phí sửa lỗi về sau.</p>
+                </div>
+                <div class="tab-content hidden fade-in" id="design">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-4">Hỗ Trợ Thiết Kế Hệ Thống và Giao Diện</h3>
+                    <p class="text-gray-700">Từ việc tạo ra các sơ đồ kiến trúc dựa trên mô tả ngôn ngữ tự nhiên, đến việc phác thảo các mẫu giao diện người dùng (UI mockups), GenAI đang trở thành một công cụ hỗ trợ đắc lực cho các kiến trúc sư phần mềm và nhà thiết kế UI/UX, giúp đẩy nhanh quá trình lên ý tưởng và tạo mẫu.</p>
+                </div>
+                <div class="tab-content hidden fade-in" id="optimization">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-4">Tối Ưu Hóa Hiệu Năng và Chi Phí</h3>
+                    <p class="text-gray-700">GenAI có thể phân tích mã nguồn và đề xuất các phương án tối ưu hóa hiệu năng, ví dụ như cải thiện thuật toán hoặc giảm độ phức tạp. Ngoài ra, nó cũng có thể phân tích hạ tầng đám mây và gợi ý cách cấu hình để tiết kiệm chi phí vận hành.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenges" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Thách Thức và Rủi Ro</h2>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                Mặc dù mang lại nhiều lợi ích, việc áp dụng GenAI cũng đi kèm với những thách thức không nhỏ. Việc hiểu rõ và có chiến lược đối phó với những rủi ro này là yếu tố then chốt để khai thác thành công tiềm năng của GenAI. Hãy nhấp vào từng thẻ để tìm hiểu thêm.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="challenge-card bg-white p-6 rounded-xl shadow-md border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-semibold mb-2">Chất Lượng & Độ Tin Cậy Của Code</h3>
+                    <p class="text-gray-600">Mã do AI tạo ra có thể chứa lỗi tiềm ẩn, các lỗ hổng bảo mật hoặc không tuân theo các chuẩn mực tốt nhất. Việc kiểm duyệt và xác thực vẫn rất cần thiết.</p>
+                </div>
+                <div class="challenge-card bg-white p-6 rounded-xl shadow-md border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-semibold mb-2">Bảo Mật và Sở Hữu Trí Tuệ</h3>
+                    <p class="text-gray-600">Dữ liệu được sử dụng để huấn luyện các mô hình AI có thể chứa mã nguồn có bản quyền. Việc sử dụng mã do AI tạo ra có thể dẫn đến các vấn đề pháp lý về sở hữu trí tuệ.</p>
+                </div>
+                <div class="challenge-card bg-white p-6 rounded-xl shadow-md border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-semibold mb-2">Sự Phụ Thuộc và Suy Giảm Kỹ Năng</h3>
+                    <p class="text-gray-600">Sự phụ thuộc quá mức vào các công cụ AI có thể làm giảm khả năng tư duy giải quyết vấn đề và các kỹ năng lập trình cốt lõi của các nhà phát triển, đặc biệt là những người mới vào nghề.</p>
+                </div>
+            </div>
+        </section>
+        
+        <div id="challenge-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+             <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-8 relative">
+                <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+                <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+                <p id="modal-content" class="text-gray-700"></p>
+            </div>
+        </div>
+
+        <section id="future" class="py-16">
+            <h2 class="text-3xl font-bold text-center mb-2">Tương Lai của Ngành Kỹ Thuật Phần Mềm</h2>
+             <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
+                GenAI sẽ không thay thế hoàn toàn các kỹ sư phần mềm, mà sẽ nâng cao vai trò của họ. Tương lai sẽ là sự hợp tác chặt chẽ giữa con người và AI, nơi con người tập trung vào sự sáng tạo, tư duy kiến trúc và các quyết định chiến lược, trong khi AI đảm nhận việc triển khai và tối ưu hóa.
+            </p>
+            <div class="relative w-full max-w-4xl mx-auto py-8">
+                <div class="absolute left-1/2 top-2 h-full w-0.5 bg-blue-200"></div>
+                <div class="relative flex flex-col items-center space-y-16">
+                    <div class="w-full flex items-center justify-start">
+                        <div class="w-5/12"></div>
+                        <div class="w-2/12 flex justify-center">
+                            <div class="z-10 bg-blue-600 text-white w-24 h-24 rounded-full flex items-center justify-center text-center font-bold text-sm p-2 shadow-lg">Lập trình Thủ công</div>
+                        </div>
+                        <div class="w-5/12 bg-white p-4 rounded-lg shadow-md border border-gray-100">
+                             <p>Kỹ sư viết từng dòng mã, tập trung vào cú pháp và logic chi tiết.</p>
+                        </div>
+                    </div>
+                     <div class="w-full flex items-center justify-end">
+                         <div class="w-5/12 bg-white p-4 rounded-lg shadow-md border border-gray-100 text-right">
+                             <p>Kỹ sư hợp tác với AI để viết code, gỡ lỗi và kiểm thử nhanh hơn.</p>
+                        </div>
+                        <div class="w-2/12 flex justify-center">
+                            <div class="z-10 bg-blue-600 text-white w-24 h-24 rounded-full flex items-center justify-center text-center font-bold text-sm p-2 shadow-lg">Lập trình có AI Hỗ trợ</div>
+                        </div>
+                        <div class="w-5/12"></div>
+                    </div>
+                     <div class="w-full flex items-center justify-start">
+                        <div class="w-5/12"></div>
+                        <div class="w-2/12 flex justify-center">
+                            <div class="z-10 bg-blue-600 text-white w-24 h-24 rounded-full flex items-center justify-center text-center font-bold text-sm p-2 shadow-lg">Phát triển do AI Dẫn dắt</div>
+                        </div>
+                        <div class="w-5/12 bg-white p-4 rounded-lg shadow-md border border-gray-100">
+                             <p>Kỹ sư mô tả yêu cầu ở mức cao, AI tự động tạo ra phần lớn hệ thống.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-4 text-center">
+            <p>&copy; 2025 Phân tích tác động của GenAI. Được tạo ra để mục đích trình diễn.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const adoptionCtx = document.getElementById('adoptionChart').getContext('2d');
+            new Chart(adoptionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2022', '2023', '2024 (ước tính)', '2025 (dự báo)'],
+                    datasets: [{
+                        label: 'Tỷ lệ sử dụng (%)',
+                        data: [15, 45, 75, 90],
+                        backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                             grid: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                             grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const productivityCtx = document.getElementById('productivityChart').getContext('2d');
+            new Chart(productivityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Viết code mới', 'Gỡ lỗi & Sửa lỗi', 'Viết tài liệu', 'Tác vụ khác'],
+                    datasets: [{
+                        label: 'Thời gian tiết kiệm',
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            'rgba(37, 99, 235, 0.9)',
+                            'rgba(59, 130, 246, 0.9)',
+                            'rgba(96, 165, 250, 0.9)',
+                            'rgba(147, 197, 253, 0.9)'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                         tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => item.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const target = document.getElementById(tab.dataset.target);
+
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+
+                    target.classList.remove('hidden');
+                });
+            });
+
+            const challengeCards = document.querySelectorAll('.challenge-card');
+            const modal = document.getElementById('challenge-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            
+            const challengeDetails = {
+                "Chất Lượng & Độ Tin Cậy Của Code": "Mặc dù GenAI có thể tạo code nhanh chóng, nhưng chất lượng không phải lúc nào cũng được đảm bảo. Code có thể chứa lỗi logic, không hiệu quả, hoặc không tuân theo các tiêu chuẩn mã hóa của dự án. Điều này đòi hỏi các kỹ sư phải có kỹ năng đánh giá, kiểm tra và chỉnh sửa code do AI tạo ra, thay vì tin tưởng một cách mù quáng.",
+                "Bảo Mật và Sở Hữu Trí Tuệ": "Các mô hình GenAI được huấn luyện trên một lượng lớn dữ liệu từ internet, bao gồm cả mã nguồn mở. Điều này làm dấy lên lo ngại về việc mã được tạo ra có thể vô tình vi phạm giấy phép bản quyền. Hơn nữa, AI có thể tạo ra mã có lỗ hổng bảo mật nếu được huấn luyện trên các ví dụ không an toàn. Việc quét và kiểm tra bảo mật vẫn là một bước không thể thiếu.",
+                "Sự Phụ Thuộc và Suy Giảm Kỹ Năng": "Nếu các nhà phát triển, đặc biệt là các lập trình viên mới, quá phụ thuộc vào GenAI, họ có thể mất đi cơ hội để học hỏi và phát triển các kỹ năng giải quyết vấn đề cốt lõi. Việc hiểu sâu về các nguyên tắc cơ bản của khoa học máy tính và kỹ thuật phần mềm trở nên quan trọng hơn bao giờ hết để có thể chỉ đạo và kiểm soát AI một cách hiệu quả."
+            };
+
+            challengeCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const title = card.querySelector('h3').innerText;
+                    modalTitle.innerText = title;
+                    modalContent.innerText = challengeDetails[title];
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+            });
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+            
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

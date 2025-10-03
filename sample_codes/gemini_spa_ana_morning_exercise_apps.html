@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích Ứng Dụng Tập Luyện Buổi Sáng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Fitness -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive decision-making tool. It begins with a hero section for context. The core is an interactive dashboard with filters (Goal, Level, Cost) that dynamically update a grid of app cards. This empowers users to find relevant apps quickly. Clicking a card reveals details. Below, a dynamic Chart.js bar chart provides a visual comparison of the filtered apps based on key metrics. The page concludes with a breakdown of essential features and expert recommendations for different user profiles. This structure guides the user from broad exploration to a specific, informed choice, making it more useful than a static report. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: App list with various attributes (ratings, cost, level). Goal: Compare. Viz/Presentation: Interactive card grid dynamically filtered by JS. Interaction: User clicks filter buttons (Level, Cost, Goal) to see a refined list. Justification: Allows users to narrow down the vast options to what's relevant to them, preventing information overload.
+        2. Report Info: Comparative metrics (Variety, Beginner Friendliness, Cost-Effectiveness). Goal: Compare quantitatively. Viz/Presentation: Horizontal Bar Chart (Chart.js/Canvas). Interaction: Chart updates based on the filters applied to the card grid. Justification: A bar chart is the best way to visually compare scores across multiple items. Tying it to the filters makes the comparison contextual.
+        3. Report Info: Detailed app descriptions. Goal: Inform. Viz/Presentation: Expandable detail section within each card. Interaction: Clicking a card toggles the visibility of its detailed description. Justification: Keeps the main interface clean while providing deep-dive information on demand.
+        4. Report Info: Key feature trends. Goal: Organize & Inform. Viz/Presentation: Styled grid of cards with icons (Unicode) and text. Interaction: None, static informational display. Justification: A visually appealing way to present key takeaways that are universally applicable.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+        .filter-btn.active {
+            background-color: #0891b2;
+            color: white;
+            font-weight: 600;
+        }
+        .app-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .details-section {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .details-section.open {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-cyan-700 mb-4">Chọn Trợ Lý Tập Luyện Buổi Sáng</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">Khám phá và so sánh các ứng dụng thể dục hàng đầu để bắt đầu ngày mới đầy năng lượng. Báo cáo tương tác này sẽ giúp bạn tìm ra ứng dụng hoàn hảo cho mục tiêu và phong cách sống của mình.</p>
+        </header>
+
+        <main>
+            <section id="interactive-dashboard" class="bg-white p-6 rounded-xl shadow-lg mb-12">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Bảng Điều Khiển So Sánh Ứng Dụng</h2>
+                
+                <div id="filters" class="flex flex-wrap justify-center gap-4 mb-8">
+                    <div class="w-full md:w-auto">
+                        <label class="font-semibold text-gray-700 mb-2 block text-center">Trình độ:</label>
+                        <div class="flex justify-center rounded-lg shadow-sm" role="group" data-filter-group="level">
+                            <button type="button" class="filter-btn active px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100" data-filter="all">Tất cả</button>
+                            <button type="button" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100" data-filter="beginner">Mới bắt đầu</button>
+                            <button type="button" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100" data-filter="advanced">Nâng cao</button>
+                        </div>
+                    </div>
+                     <div class="w-full md:w-auto">
+                        <label class="font-semibold text-gray-700 mb-2 block text-center">Chi phí:</label>
+                        <div class="flex justify-center rounded-lg shadow-sm" role="group" data-filter-group="cost">
+                            <button type="button" class="filter-btn active px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100" data-filter="all">Tất cả</button>
+                            <button type="button" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100" data-filter="free">Miễn phí</button>
+                            <button type="button" class="filter-btn px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100" data-filter="paid">Có phí</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="apps-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+                 <p id="no-results" class="text-center text-gray-500 py-8 hidden">Không tìm thấy ứng dụng nào phù hợp với lựa chọn của bạn.</p>
+            </section>
+
+            <section id="comparison-chart-section" class="bg-white p-6 rounded-xl shadow-lg mb-12">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">So Sánh Trực Quan</h2>
+                <p class="text-center text-gray-500 mb-6">Biểu đồ dưới đây so sánh các ứng dụng được lọc dựa trên các tiêu chí quan trọng.</p>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </section>
+            
+            <section id="features-section" class="mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Các Tính Năng Then Chốt Cần Tìm Kiếm</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-4xl mb-3">🎯</div>
+                        <h3 class="font-semibold text-lg mb-2 text-cyan-700">Kế Hoạch Cá Nhân Hóa</h3>
+                        <p class="text-gray-600 text-sm">Ứng dụng nên tạo lộ trình tập luyện dựa trên mục tiêu, trình độ và thời gian của bạn.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-4xl mb-3">📚</div>
+                        <h3 class="font-semibold text-lg mb-2 text-cyan-700">Thư Viện Bài Tập Đa Dạng</h3>
+                        <p class="text-gray-600 text-sm">Sự đa dạng giúp bạn không bị nhàm chán và tác động đến nhiều nhóm cơ khác nhau.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-4xl mb-3">📈</div>
+                        <h3 class="font-semibold text-lg mb-2 text-cyan-700">Theo Dõi Tiến Độ</h3>
+                        <p class="text-gray-600 text-sm">Các chỉ số rõ ràng về sự tiến bộ sẽ là nguồn động lực lớn để bạn duy trì thói quen.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-4xl mb-3">👨‍👩‍👧‍👦</div>
+                        <h3 class="font-semibold text-lg mb-2 text-cyan-700">Yếu Tố Cộng Đồng</h3>
+                        <p class="text-gray-600 text-sm">Thử thách, bảng xếp hạng và chia sẻ kết quả giúp tăng tính kết nối và động lực.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="recommendations" class="bg-cyan-50 p-8 rounded-xl">
+                 <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Lựa Chọn Của Chuyên Gia</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                     <div class="text-center">
+                         <h3 class="font-bold text-xl text-cyan-800 mb-2">Dành cho người mới bắt đầu</h3>
+                         <p class="text-gray-700"><strong>Nike Training Club</strong> là lựa chọn tuyệt vời với các chương trình có cấu trúc, hướng dẫn chi tiết và hoàn toàn miễn phí, giúp bạn xây dựng nền tảng vững chắc.</p>
+                     </div>
+                     <div class="text-center">
+                         <h3 class="font-bold text-xl text-cyan-800 mb-2">Dành cho người bận rộn</h3>
+                         <p class="text-gray-700"><strong>7 Minute Workout</strong> cung cấp các bài tập ngắn, cường độ cao và hiệu quả, dễ dàng tích hợp vào lịch trình bận rộn nhất mà không cần dụng cụ.</p>
+                     </div>
+                     <div class="text-center">
+                         <h3 class="font-bold text-xl text-cyan-800 mb-2">Dành cho người yêu Yoga</h3>
+                         <p class="text-gray-700"><strong>Down Dog</strong> tạo ra một buổi tập yoga hoàn toàn mới mỗi lần bạn sử dụng, với khả năng tùy chỉnh cao, giúp bạn không bao giờ lặp lại một buổi tập nhàm chán.</p>
+                     </div>
+                 </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const appData = [
+                {
+                    id: 1,
+                    name: 'Nike Training Club',
+                    logo: '👟',
+                    rating: 4.9,
+                    users: '50M+',
+                    level: ['beginner', 'advanced'],
+                    cost: 'free',
+                    summary: 'Thư viện khổng lồ các bài tập và kế hoạch cá nhân hóa, hoàn toàn miễn phí.',
+                    details: 'Nike Training Club (NTC) nổi bật với kho bài tập cực kỳ phong phú, từ yoga, sức mạnh đến cardio, được thiết kế bởi các huấn luyện viên chuyên nghiệp của Nike. Ứng dụng cung cấp các kế hoạch tập luyện linh hoạt và thích ứng với tiến độ của bạn. Đây là lựa chọn toàn diện nhất trên thị trường hiện nay.',
+                    scores: { variety: 5, beginnerFriendly: 4, costEffectiveness: 5 }
+                },
+                {
+                    id: 2,
+                    name: 'Peloton',
+                    logo: '🚴',
+                    rating: 4.7,
+                    users: '10M+',
+                    level: ['beginner', 'advanced'],
+                    cost: 'paid',
+                    summary: 'Trải nghiệm lớp học năng động với HLV truyền cảm hứng, có cả lớp trực tiếp.',
+                    details: 'Peloton mang lại cảm giác của một phòng tập cao cấp ngay tại nhà. Với hàng nghìn lớp học theo yêu cầu và trực tiếp, từ đạp xe, chạy bộ đến yoga, bạn sẽ luôn tìm thấy động lực từ các huấn luyện viên hàng đầu và cộng đồng sôi nổi. Tuy nhiên, chi phí đăng ký khá cao.',
+                    scores: { variety: 5, beginnerFriendly: 3, costEffectiveness: 2 }
+                },
+                {
+                    id: 3,
+                    name: '7 Minute Workout',
+                    logo: '⏱️',
+                    rating: 4.6,
+                    users: '10M+',
+                    level: ['beginner'],
+                    cost: 'paid',
+                    summary: 'Các bài tập ngắn, cường độ cao dựa trên khoa học, không cần dụng cụ.',
+                    details: 'Được thiết kế cho những người có ít thời gian, ứng dụng này cung cấp các bài tập kéo dài 7 phút dựa trên nguyên tắc HIIT (luyện tập cường độ cao ngắt quãng). Nó cực kỳ hiệu quả để cải thiện sức khỏe tim mạch và trao đổi chất. Phiên bản miễn phí khá hạn chế.',
+                    scores: { variety: 2, beginnerFriendly: 5, costEffectiveness: 4 }
+                },
+                {
+                    id: 4,
+                    name: 'FitOn',
+                    logo: '💃',
+                    rating: 4.8,
+                    users: '10M+',
+                    level: ['beginner', 'advanced'],
+                    cost: 'free',
+                    summary: 'Tập luyện cùng người nổi tiếng và bạn bè, tập trung vào sự vui vẻ.',
+                    details: 'FitOn mang đến một cách tiếp cận tập luyện vui vẻ và mang tính xã hội. Bạn có thể tham gia các lớp học được dẫn dắt bởi các huấn luyện viên nổi tiếng, và thậm chí mời bạn bè cùng tập. Ứng dụng cung cấp nhiều lớp học miễn phí chất lượng cao.',
+                    scores: { variety: 4, beginnerFriendly: 4, costEffectiveness: 4 }
+                },
+                {
+                    id: 5,
+                    name: 'Down Dog (Yoga)',
+                    logo: '🧘',
+                    rating: 4.9,
+                    users: '5M+',
+                    level: ['beginner', 'advanced'],
+                    cost: 'paid',
+                    summary: 'Tạo ra một buổi tập yoga độc đáo mỗi lần, tùy chỉnh cực kỳ linh hoạt.',
+                    details: 'Không giống như các video được quay sẵn, Down Dog tạo ra một chuỗi yoga hoàn toàn mới cho bạn mỗi khi tập. Bạn có thể tùy chỉnh mọi thứ: thời gian, cấp độ, trọng tâm, giọng nói và âm nhạc. Đây là ứng dụng bắt buộc phải có cho những ai yêu thích yoga.',
+                    scores: { variety: 4, beginnerFriendly: 5, costEffectiveness: 3 }
+                }
+            ];
+
+            const appsGrid = document.getElementById('apps-grid');
+            const noResultsMessage = document.getElementById('no-results');
+            const filters = { level: 'all', cost: 'all' };
+            let comparisonChart;
+
+            function renderApps() {
+                const filteredApps = appData.filter(app => {
+                    const levelMatch = filters.level === 'all' || app.level.includes(filters.level);
+                    const costMatch = filters.cost === 'all' || app.cost === filters.cost;
+                    return levelMatch && costMatch;
+                });
+
+                appsGrid.innerHTML = '';
+
+                if(filteredApps.length === 0) {
+                    noResultsMessage.classList.remove('hidden');
+                } else {
+                    noResultsMessage.classList.add('hidden');
+                }
+                
+                filteredApps.forEach(app => {
+                    const card = document.createElement('div');
+                    card.className = 'app-card bg-white rounded-lg shadow-md overflow-hidden cursor-pointer border border-gray-200';
+                    card.innerHTML = `
+                        <div class="p-5">
+                            <div class="flex items-center mb-4">
+                                <div class="text-4xl mr-4">${app.logo}</div>
+                                <div class="flex-grow">
+                                    <h3 class="text-xl font-bold text-gray-800">${app.name}</h3>
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <span class="text-yellow-500">⭐</span>
+                                        <span class="font-semibold ml-1 mr-3">${app.rating}</span>
+                                        <span>👥 ${app.users} người dùng</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 mb-4">${app.summary}</p>
+                            <div class="details-section" data-details-id="${app.id}">
+                                <p class="text-gray-600 text-sm">${app.details}</p>
+                            </div>
+                        </div>
+                    `;
+                    appsGrid.appendChild(card);
+                    
+                    card.addEventListener('click', () => {
+                         const details = card.querySelector('.details-section');
+                         details.classList.toggle('open');
+                    });
+                });
+                
+                updateChart(filteredApps);
+            }
+            
+            function updateChart(data) {
+                const ctx = document.getElementById('comparisonChart').getContext('2d');
+                const labels = data.map(app => app.name);
+                
+                const datasets = [
+                    {
+                        label: 'Độ đa dạng',
+                        data: data.map(app => app.scores.variety),
+                        backgroundColor: 'rgba(8, 145, 178, 0.6)',
+                        borderColor: 'rgba(8, 145, 178, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Dễ cho người mới',
+                        data: data.map(app => app.scores.beginnerFriendly),
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Hiệu quả chi phí',
+                        data: data.map(app => app.scores.costEffectiveness),
+                        backgroundColor: 'rgba(107, 114, 128, 0.6)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        borderWidth: 1
+                    }
+                ];
+
+                if (comparisonChart) {
+                    comparisonChart.data.labels = labels;
+                    comparisonChart.data.datasets = datasets;
+                    comparisonChart.update();
+                } else {
+                    comparisonChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: datasets
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 5,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                },
+                                y: {
+                                    ticks: {
+                                        autoSkip: false,
+                                        callback: function(value) {
+                                            const label = this.getLabelForValue(value);
+                                            if (label.length > 15) {
+                                                return label.slice(0, 15) + '...';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.x !== null) {
+                                                label += context.parsed.x + ' / 5';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const group = button.closest('[data-filter-group]').dataset.filterGroup;
+                    const value = button.dataset.filter;
+                    filters[group] = value;
+                    
+                    document.querySelectorAll(`[data-filter-group="${group}"] .filter-btn`).forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    button.classList.add('active');
+                    
+                    renderApps();
+                });
+            });
+
+            renderApps();
+        });
+    </script>
+</body>
+</html>

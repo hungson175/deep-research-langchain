@@ -1,0 +1,126 @@
+{
+  "session_id": "workflow_20251003_140351",
+  "period": "Y",
+  "current_phase": 5,
+  "completed_steps": [
+    "phase_0_topics_generated",
+    "phase_1_zalopay_attacks_generated",
+    "phase_1_vnpay_attacks_generated",
+    "phase_2_defensive_vs_zalopay_generated",
+    "phase_2_defensive_vs_vnpay_generated",
+    "phase_2_5_briefs_filtered",
+    "phase_3_report_1_completed",
+    "phase_3_report_2_completed",
+    "phase_3_report_3_completed",
+    "phase_3_report_4_completed",
+    "phase_3_report_5_completed",
+    "phase_3_report_6_completed",
+    "phase_3_report_7_completed",
+    "phase_3_report_8_completed",
+    "phase_3_report_9_completed",
+    "phase_3_report_10_completed",
+    "phase_4_rankings_completed"
+  ],
+  "mrt_topics_file": ".output/mrT_topics_20251003_1413.md",
+  "opponent_attacks_files": {
+    "zalopay": ".output/opponent_zalopay_attacks_20251003_1432.md",
+    "vnpay": ".output/opponent_vnpay_attacks_20251003_1445.md"
+  },
+  "defensive_briefs_files": {
+    "zalopay": ".output/mrt_defensive_vs_zalopay_20251003_1453.md",
+    "vnpay": ".output/mrt_defensive_vs_vnpay_20251003_1500.md"
+  },
+  "filtered_briefs": [
+    {
+      "title": "Regulatory Impacts on Foreign Ownership and Bank Capital in Fintech",
+      "content": "**Mục tiêu nghiên cứu:** Đánh giá các thay đổi quy định mới nhất về sở hữu nước ngoài trong các tổ chức tín dụng và yêu cầu vốn nghiêm ngặt hơn (như CAR tối thiểu 8-10.5%) có thể ảnh hưởng như thế nào đến vị thế chiến lược của MoMo trong hệ sinh thái fintech Việt Nam năm 2025.\n\n**Bối cảnh nền tảng:** Là nền tảng thanh toán di động hàng đầu Việt Nam, MoMo phụ thuộc vào các đối tác ngân hàng và đầu tư nước ngoài để mở rộng quy mô và đổi mới. Các quy định mới từ Nghị định 69/2025/ND-CP và Thông tư 14/2025/TT-NHNN, cho phép sở hữu nước ngoài lên đến 49% trong các ngân hàng gặp khó khăn nhưng tăng cường yêu cầu vốn, có thể tạo cơ hội hợp tác nhưng cũng rủi ro hạn chế dòng vốn và tăng chi phí tuân thủ. Điều này quan trọng vì MoMo cần bảo vệ mô hình kinh doanh cốt lõi trước các thay đổi quy định có thể làm chậm lại sự tăng trưởng của thị trường fintech, dự kiến đạt 50 tỷ USD vào 2030, đồng thời ảnh hưởng đến khả năng thu hút đầu tư chiến lược từ các nhà đầu tư quốc tế.\n\n**Các lĩnh vực cụ thể cần điều tra:** \n- Phân tích chi tiết Nghị định 69 và các thông tư liên quan, bao gồm quy trình phê duyệt sở hữu nước ngoài và tác động đến các đối tác ngân hàng của MoMo (như Vietcombank, BIDV).\n- Đánh giá rủi ro tuân thủ vốn (CAR, Tier 1) đối với các liên minh fintech-ngân hàng, với dữ liệu từ SBV và các báo cáo ngành.\n- Khảo sát các trường hợp thực tế về M&A fintech năm 2025 và dự báo tác động đến dòng vốn đầu tư vào ví di động.\n- So sánh với quy định khu vực (ASEAN) để xác định lợi thế cạnh tranh cho MoMo.\n\n**Kết quả mong đợi:** Các insights về chiến lược tuân thủ và cơ hội hợp tác, bao gồm khuyến nghị điều chỉnh mô hình đối tác để giảm rủi ro quy định, dự báo tác động đến tăng trưởng doanh thu MoMo (dựa trên CAGR 21% của fintech), và kế hoạch ứng phó để duy trì vị thế dẫn đầu thị trường.",
+      "merged_from": [
+        "Bản Tóm Tắt Nghiên Cứu Chiến Lược 1: Tác Động Của Thay Đổi Quy Định Về Sở Hữu Nước Ngoài Và Yêu Cầu Vốn Ngân Hàng Đến Hoạt Động Fintech"
+      ]
+    },
+    {
+      "title": "Competition from Traditional Banks and Rival Fintechs in the E-Wallet Market",
+      "content": "**Mục tiêu nghiên cứu:** Xác định các động thái cạnh tranh từ các ngân hàng (như Vietcombank, Sacombank) và fintech đối thủ (ZaloPay, VNPAY) trong thị trường ví điện tử Việt Nam năm 2025, và đề xuất chiến lược bảo vệ thị phần của MoMo.\n\n**Bối cảnh nền tảng:** Thị trường ví điện tử và thẻ trả trước Việt Nam dự kiến tăng từ 5.68 tỷ USD năm 2024 lên 7.19 tỷ USD năm 2025 (CAGR 26.6%), với MoMo chiếm ưu thế nhưng đối mặt với sự xâm nhập của các chương trình thẻ trả trước nội địa từ ngân hàng và tích hợp siêu ứng dụng từ đối thủ. Sự cạnh tranh này đe dọa mô hình kinh doanh cốt lõi của MoMo, tập trung vào thanh toán di động và bao gồm tài chính, đặc biệt khi các ngân hàng đa dạng hóa thu nhập phi lãi suất qua fintech, có thể làm giảm lòng tin người dùng và tăng trưởng người dùng hoạt động (hiện 32 triệu).\n\n**Các lĩnh vực cụ thể cần điều tra:** \n- Phân tích thị phần và chiến lược của các đối thủ chính (MoMo vs. ZaloPay, ngân hàng) dựa trên dữ liệu từ ResearchAndMarkets và báo cáo NAPAS.\n- Đánh giá các sáng kiến mới như chương trình thẻ trả trước nội địa và tích hợp ví với ngân hàng số, bao gồm tác động đến giao dịch QR và thanh toán di động.\n- Khảo sát hành vi người dùng (millennials, Gen Z) qua dữ liệu khảo sát 2025 để xác định yếu tố chuyển dịch (phí, tiện lợi, tích hợp).\n- Dự báo xu hướng hợp nhất thị trường (từ 40+ ví xuống siêu ứng dụng) và rủi ro mất thị phần cho MoMo.\n\n**Kết quả mong đợi:** Insights về các điểm yếu cạnh tranh của MoMo, khuyến nghị đổi mới sản phẩm (như tích hợp BNPL hoặc đầu tư vi mô), và kế hoạch định vị để đạt tăng trưởng 23.1% CAGR đến 2029, giúp bảo vệ doanh thu và mở rộng người dùng mới.",
+      "merged_from": [
+        "Bản Tóm Tắt Nghiên Cứu Chiến Lược 2: Cạnh Tranh Gay Gắt Từ Ngân Hàng Truyền Thống Và Fintech Khác Trong Thị Trường Ví Điện Tử"
+      ]
+    },
+    {
+      "title": "Cybersecurity Risks and Open Banking Implementation",
+      "content": "**Mục tiêu nghiên cứu:** Đánh giá rủi ro an ninh mạng (phishing, tội phạm tài chính) và cơ hội từ ngân hàng mở ở Việt Nam năm 2025, đề xuất biện pháp bảo vệ cho hệ thống MoMo.\n\n**Bối cảnh nền tảng:** Với các cuộc tấn công phishing cao thứ ba ASEAN (Kaspersky 2020) và thị trường fintech dễ bị tổn thương do tăng trưởng nhanh (15.7 tỷ USD 2024), MoMo cần củng cố lòng tin người dùng trước khi triển khai ngân hàng mở theo Kế hoạch SBV. Xu hướng siêu ứng dụng và API chia sẻ dữ liệu tạo rủi ro lộ thông tin, nhưng cũng cơ hội đổi mới (ứng dụng tài chính cá nhân), ảnh hưởng đến bảo vệ kinh doanh cốt lõi và mở rộng dịch vụ trong bối cảnh xếp hạng an ninh mạng GCI của Việt Nam tăng nhưng vẫn cần cải thiện.\n\n**Các lĩnh vực cụ thể cần điều tra:** \n- Phân tích các vụ tấn công fintech 2025 (dữ liệu từ Kaspersky, SBV) và rủi ro cụ thể cho ví di động như MoMo.\n- Đánh giá khung pháp lý ngân hàng mở (sandbox, tiêu chuẩn API, quản lý đồng ý) từ Konsentus và SBV.\n- Khảo sát thực tiễn tốt nhất từ UK/EU và khu vực (Singapore PayNow) để áp dụng cho MoMo.\n- Dự báo tác động của CBDC thí điểm (Chỉ thị 942) đến an ninh hệ thống.\n\n**Kết quả mong đợi:** Insights về công nghệ bảo mật (tokenization, AI phát hiện gian lận), khuyến nghị khung tuân thủ cho ngân hàng mở để tăng doanh thu từ dịch vụ mới, và kế hoạch giảm thiểu rủi ro, giúp MoMo dẫn đầu đổi mới an toàn và duy trì tăng trưởng bền vững.",
+      "merged_from": [
+        "Bản Tóm Tắt Nghiên Cứu Chiến Lược 5: Rủi Ro An Ninh Mạng Và Triển Khai Ngân Hàng Mở Trong Bối Cảnh Tăng Trưởng Số"
+      ]
+    },
+    {
+      "title": "Enhancing Gen Z and Millennials Engagement through Social and Entertainment Integration",
+      "content": "- **Mục Tiêu Nghiên Cứu**: Làm thế nào để MoMo phát triển các tính năng xã hội và giải trí tích hợp sâu, nhằm tăng tỷ lệ giữ chân và chuyển đổi người dùng trẻ từ ZaloPay, đạt ít nhất 20% tăng trưởng engagement trong phân khúc Gen Z (dưới 35 tuổi) vào năm 2026?\n  \n- **Bối Cảnh Chiến Lược**: Gen Z và millennials chiếm 55% dân số Việt Nam (khoảng 19 triệu người theo Tổng cục Thống kê 2025), là động lực tăng trưởng fintech nhưng MoMo chỉ chiếm 25% thị phần ở nhóm này do thiếu \"viral loop\" xã hội (như group payments, P2P gifting) và tích hợp giải trí (gaming, OTT). ZaloPay đang khai thác Zalo (100 triệu người dùng) và VNG để thu hút 3-5 triệu người dùng MoMo qua các chiến dịch KOL và cashback. Nếu không hành động, chúng ta có thể mất 40% giao dịch giải trí (hiện 16 triệu giao dịch Q3/2025), ảnh hưởng đến GMV 340 nghìn tỷ VND và vị thế super-app.\n\n- **Lĩnh Vực Điều Tra**: \n  - Xu hướng sử dụng xã hội và giải trí của Gen Z ở Việt Nam (dữ liệu từ Visa 'Gen Z Decoded' 2024, Decision Lab Q1/2025 về tỷ lệ 75% dùng YouTube/TikTok cho thanh toán live commerce).\n  - Các mô hình thành công quốc tế (như WeChat Pay ở Trung Quốc hoặc GrabPay với gaming) và đối thủ nội địa (tích hợp ZaloPay-VNG, giải thưởng Vietnam Game Day 2025).\n  - Phân tích dữ liệu nội bộ MoMo về retention Gen Z (so sánh với ZaloPay qua A/B testing) và rủi ro lừa đảo (25% lo ngại theo Visa).\n  - Khả năng hợp tác với nền tảng xã hội/giải trí (TikTok, YouTube, VNG) để phát triển tính năng như \"MoMo Social Share\" hoặc \"Game Pass\" với cashback 10%.\n\n- **Insights Dự Kiến**: Nghiên cứu sẽ cung cấp dữ liệu cụ thể về sở thích Gen Z (ví dụ: 2/3 theo đuổi mục tiêu tài chính qua mạng xã hội), giúp quyết định đầu tư 20-30% ngân sách marketing vào KOL campaigns và tích hợp AI cá nhân hóa (dựa trên lịch sử chat). Điều này cho phép MoMo ra mắt tính năng mới Q1/2026, tăng NPS >70 và chuyển 15% người dùng ZaloPay, biến điểm yếu thành lợi thế hệ sinh thái.",
+      "merged_from": [
+        "Báo Cáo 1: Tăng Cường Sự Tham Gia Của Gen Z Và Millennials Qua Tích Hợp Xã Hội Và Giải Trí"
+      ]
+    },
+    {
+      "title": "Comprehensive Competitive Analysis and Counter-Strategies Against Rivals",
+      "content": "**Mục tiêu nghiên cứu:** Xác định các động thái cạnh tranh từ các ngân hàng truyền thống, fintech đối thủ như ZaloPay và VNPAY trong thị trường ví điện tử Việt Nam năm 2025, đánh giá mở rộng quốc tế của ZaloPay, và đề xuất chiến lược phản công toàn diện để bảo vệ và mở rộng thị phần của MoMo.\n\n**Bối cảnh nền tảng:** Thị trường ví điện tử Việt Nam dự kiến tăng trưởng mạnh (CAGR 26.6%), với MoMo dẫn đầu nhưng đối mặt với cạnh tranh gay gắt từ ngân hàng đa dạng hóa và đối thủ tích hợp siêu ứng dụng. ZaloPay đang chuyển hướng quốc tế với QR thanh toán Trung Quốc và Alipay+, đe dọa vị thế của MoMo nếu không phản ứng, đặc biệt trong bối cảnh quy định mới công nhận ví điện tử độc lập và xu hướng hợp nhất thị trường.\n\n**Các lĩnh vực cụ thể cần điều tra:** \n- Phân tích thị phần, chiến lược đối thủ (MoMo vs. ZaloPay, VNPAY, ngân hàng) dựa trên dữ liệu ResearchAndMarkets, NAPAS, NHNN.\n- Đánh giá sáng kiến mới như thẻ trả trước, tích hợp ngân hàng số, và động thái quốc tế của ZaloPay (QR Singapore/Hàn Quốc, hợp tác UnionPay).\n- Khảo sát hành vi người dùng và xu hướng hợp nhất thị trường, dự báo rủi ro mất thị phần.\n- Cơ hội phản công: hợp tác quốc tế (Visa/Mastercard), đổi mới sản phẩm để đạt tăng trưởng 200% doanh thu dịch vụ mới.\n\n**Kết quả mong đợi:** Insights về điểm yếu cạnh tranh, khuyến nghị đổi mới (BNPL, mở rộng quốc tế), kế hoạch định vị để duy trì 68% thị phần và tăng trưởng CAGR 23.1%, giúp MoMo dẫn dắt thị trường và biến mối đe dọa thành cơ hội.",
+      "merged_from": [
+        "Bản Tóm Tắt Nghiên Cứu Chiến Lược 2: Cạnh Tranh Gay Gắt Từ Ngân Hàng Truyền Thống Và Fintech Khác Trong Thị Trường Ví Điện Tử",
+        "Báo Cáo 3: Phân Tích Cạnh Tranh Tổng Thể Và Chiến Lược Phản Công Quốc Tế"
+      ]
+    },
+    {
+      "title": "Strengthening Merchant Network and B2B Segment",
+      "content": "**Research Objective**: Clarify effective strategies for expanding the merchant network in the SME and B2B segments in Vietnam for 2025-2026, focusing on attracting and retaining merchants from competitors like VNPay, while evaluating the impact of QR trends and AI integration on conversion rates.\n\n**Strategic Context**: As MoMo's CEO, I am most concerned about VNPay's Strategy 1, where they leverage their 350,000 acceptance points to attack B2B, potentially leading to a loss of 20-30% of our SME merchants, indirectly reducing GMV and user market share from 68% to below 60%. With MoMo having only about 200,000 points, protecting this segment is key to maintaining our leading position, preventing user churn through daily transactions, and strengthening the super-app ecosystem, especially as the QR market grows at 14% CAGR but competition from bank apps reduces e-wallet usage frequency.\n\n**Investigation Areas**: \n- Analyze MoMo's current merchant data compared to VNPay (quantity, geographic distribution by F&B, retail, SME in Tier-2/3).\n- Trends in QR and POS integration adoption for B2B, including case studies from SEA countries like Thailand (PromptPay) and the impact of Decree 52/2024 on cashless payments.\n- Evaluate merchant incentive programs (fee reductions, VNeDOC e-invoice integration) and cross-marketing effectiveness via Zalo/Facebook targeting 50,000 SMEs.\n- Survey merchant switching risks (NPS, feedback from 1,000 pilot businesses) and B2B GMV growth forecasting models (based on FiinGroup and NHNN reports).\n\n**Expected Insights**: The research will provide data to decide on investing 5-10 trillion VND in the \"MoMo Merchant Boost\" program (free POS/QR conversion, partnerships with 20 banks), aiming to increase merchants to 300,000 points in 12 months, forecast 25% B2B GMV growth, and reduce user market share loss risk to below 3%, thereby turning defense into a counter-attack by poaching merchants from VNPay.",
+      "merged_from": [
+        "Defensive Research Brief 1: Strengthening Merchant Network and B2B Segment"
+      ]
+    },
+    {
+      "title": "Enhancing Financial Products and Bank Partnerships for Gen Z",
+      "content": "**Research Objective**: Identify deep bank partnership models to develop financial products (BNPL, quick loans, savings) for Gen Z/Millennials, evaluate 2025 AML compliance risks, and ways to reduce NPL below 1.5%, to counter VNPay's Finance Hub incursion.\n\n**Strategic Context**: VNPay's Strategy 2 exploits our partnership weakness (only 10 banks for MoMo vs. 40+ for them), potentially attracting 2 million users from us, reducing financial market share from 50% in BNPL to 40-45%. With the BNPL market growing at 26.7% CAGR to 2030 and new regulations requiring biometric verification, lack of deep integration will undermine user trust, affecting the super-app ecosystem and service fee revenue (currently 30% of total revenue). As CEO, I prioritize protecting this segment to maintain user loyalty and counter delinquency risks.\n\n**Investigation Areas**: \n- Analyze MoMo financial product performance (CLO, Túi Thần Tài) vs. VNPay, including NPL data, usage rates (from Decision Lab Q4/2024), and AI eKYC/biometric trends.\n- Successful partnership case studies in Vietnam/SEA (e.g., Grab-Fin for BNPL) and impact of Decree 94/2025 on Fintech testing.\n- Survey Gen Z user needs (1 million samples via TikTok/Shopee) for quick loans, bank-linked savings, and wallet transfer incentives (500,000 VND cashback).\n- Evaluate AML regulatory risks and audits with NHNN, including financial fee revenue forecasting models (based on Juniper Research on embedded finance).\n\n**Expected Insights**: Results will support expanding partnerships to 25 banks, launching \"MoMo Finance Secure\" with 5-minute eKYC and competitive rates, expected to attract 1.5 million new users, increase financial GMV by 30%, and reduce NPL to 1.2%, allowing MoMo to shift from defense to leading the BNPL market with a \"Digital Financial Security\" campaign to regain compliance advantage.",
+      "merged_from": [
+        "Defensive Research Brief 2: Enhancing Financial Products and Bank Partnerships"
+      ]
+    },
+    {
+      "title": "Strategies for Financial Inclusion in Rural and Unbanked Populations",
+      "content": "**Mục tiêu nghiên cứu:** Xây dựng chiến lược toàn diện cho MoMo để tiếp cận dân số chưa ngân hàng hóa ở nông thôn và Tier 2-3, tận dụng các sáng kiến quốc gia và hợp tác đối tác để chống lại đối thủ như ZaloPay và Grab, đạt tăng trưởng 50% giao dịch tài chính ở khu vực này vào năm 2027.\n\n**Bối cảnh nền tảng:** Với 13% dân số trưởng thành chưa ngân hàng hóa (chủ yếu nông thôn, 51% dân số góp 60% GDP), MoMo có sứ mệnh thúc đẩy bao gồm tài chính qua ví di động và open banking. Kế hoạch SBV đến 2025 và Chiến lược Quốc gia 2030 tạo cơ hội, nhưng thách thức niềm tin thấp, hạ tầng, và cạnh tranh từ ZaloPay-Grab (On-the-Go Loans) đe dọa 37 triệu unbanked, ảnh hưởng đến tăng trưởng người dùng từ 32 triệu và thị phần 68%.\n\n**Các lĩnh vực cụ thể cần điều tra:** \n- Phân tích dữ liệu World Bank, SBV, NHNN về đặc điểm unbanked/rural (vị trí, thu nhập, hành vi số; 32.6% xã có dịch vụ).\n- Đánh giá chương trình Mobile Money thí điểm, tích hợp đối tác (13 ngân hàng, Grab, Viettel/VNPT) so với đối thủ, và nhu cầu (tiết kiệm vi mô, vay nhanh, micro-insurance).\n- Khảo sát mô hình khu vực (Bakong Campuchia), rào cản (kỹ năng số 68% có smartphone nhưng thiếu kiến thức), và tác động open banking đến tín dụng vi mô.\n- Dự báo tăng trưởng với hợp tác mới (eKYC, giảm phí 20% cho switcher từ ZaloPay).\n\n**Kết quả mong đợi:** Insights về sản phẩm tùy chỉnh (ví không cần ngân hàng, giáo dục), khuyến nghị hợp tác chính phủ/đối tác để đạt 100% bao gồm 2030, tăng người dùng mới 50%, doanh thu 150% YoY, và thị phần 62% rural, hỗ trợ sứ mệnh đổi mới và tuân thủ Nghị định 13/2023.",
+      "merged_from": [
+        "Bản Tóm Tắt Nghiên Cứu Chiến Lược 4: Chiến Lược Mở Rộng Bao Gồm Tài Chính Cho Dân Số Chưa Ngân Hàng Hóa",
+        "Báo Cáo 2: Củng Cố Dịch Vụ Tài Chính Hòa Nhập Ở Khu Vực Nông Thôn Và Tăng Cường Tích Hợp Đối Tác"
+      ]
+    },
+    {
+      "title": "Opportunities and Risks in Cross-Border Payments and Rural Expansion",
+      "content": "**Mục tiêu nghiên cứu:** Đánh giá tác động của liên kết thanh toán xuyên biên giới và mở rộng rural/Tier-2/3 để xác định cơ hội tăng trưởng và rủi ro cho MoMo, tập trung vào hợp tác quốc tế (Visa, UnionPay) để capture 10-15% user dip và chống VNPay's Global Transfer.\n\n**Bối cảnh nền tảng:** Thị trường thanh toán kỹ thuật số SEA đạt 306 tỷ USD 2028 (CAGR 21%), MoMo cần tận dụng Project Nexus, QR ASEAN (VietQR-QRIS, PromptPay) cho kiều hối/thương mại (16-18 tỷ USD remittances), nhưng rủi ro từ UnionPay thống trị và geographic weakness ở rural (low penetration). VNPay khai thác để tăng users 22%, đe dọa QR GMV 14.27% CAGR và 33 triệu active users, đặc biệt với dip October 2025.\n\n**Các lĩnh vực cụ thể cần điều tra:** \n- Phân tích tiến độ Nexus/QR linkages (IMF, BIS, SBV Decision 234), remittances/softPOS NFC case studies (mBridge SEA), và dữ liệu MoMo vs. VNPay (Tier-3, cross-border tx).\n- Đánh giá UnionPay role, de-dollarization (VND-CNY), blockchain pilots (Digital Technology Law 2025).\n- Khảo sát nhu cầu rural/cross-border (500k users via telecom, 5% cashback, lower fees), dự báo GMV (Vietnam Blockchain Assoc., 87 SWIFT banks).\n- Cơ hội hợp tác (Visa/UnionPay cho 1M tx/month, 100k rural QR points).\n\n**Kết quả mong đợi:** Insights về chiến lược hợp tác/API để giảm phí, đầu tư 3-5 trillion VND vào \"MoMo Global QR\", tăng rural users 20%, capture 1M dip users, boost international revenue 35%, giúp MoMo dẫn đầu cross-border và interoperability 2025.",
+      "merged_from": [
+        "Bản Tóm Tắt Nghiên Cứu Chiến Lược 3: Cơ Hội Và Rủi Ro Từ Phát Triển Thanh Toán Xuyên Biên Giới Trong Khu Vực Đông Nam Á",
+        "Defensive Research Brief 3: Expanding Cross-Border and Rural Payments"
+      ]
+    },
+    {
+      "title": "User Retention Strategies and Regulatory Compliance",
+      "content": "**Research Objective**: Identify comprehensive user retention strategies (AI personalization, loyalty programs) combined with 2025 regulatory compliance (AML, interoperability), to reduce overall churn below 5% and counter VNPay's conversion campaigns across their 3 strategies.\n\n**Strategic Context**: As the biggest concern, the combination of VNPay's 3 strategies could cause continuous user dips (like October 2025), reducing active users from 33 million to below 30 million, impacting trust and 2B+ USD valuation. With e-wallet maturation trends (from explosive growth to loyalty focus, per FiinGroup), MoMo needs to protect the ecosystem via data-driven retention and PSD3-like compliance (EU trends influencing Vietnam), avoiding regulatory risks that slow innovation.\n\n**Investigation Areas**: \n- Analyze MoMo user churn data (September-October 2025, Gen Z/rural segments) and benchmark with VNPay/ZaloPay (from Decision Lab and Reputa Insight).\n- AI trends for personalization (fraud detection, behavioral biometrics) and impact of Decree 94/2025, PSD3 on open banking in Vietnam.\n- Survey 2 million users on loyalty factors (NPS >70, \"Safe Wallet Transfer\" counter programs) and successful retention case studies (WeChat Pay in China).\n- Evaluate aggregate risks (cyber threats, ESG compliance) and 2026 user market share forecasting models (based on Juniper Research on sustainable Fintech).\n\n**Expected Insights**: Results will support implementing \"MoMo Loyalty AI Hub\" with biometric security and personalized incentives, expected to retain 85% of new users, increase NPS to 75, and total revenue by 25%, allowing MoMo not only to defend but counter-attack with a national \"Trusted E-Wallet\" campaign, solidifying leading position ahead of 2025 regulations.",
+      "merged_from": [
+        "Defensive Research Brief 4: Maintaining User Retention and Regulatory Compliance"
+      ]
+    }
+  ],
+  "completed_reports": [
+    "reports/Regulatory Impacts on Foreign Ownership and Bank C_20251003_1543.md",
+    "reports/Competition from Traditional Banks and Rival Finte_20251003_1613.md",
+    "reports/Cybersecurity Risks and Open Banking Implementatio_20251003_1659.md",
+    "reports/Enhancing Gen Z and Millennials Engagement through_20251003_1800.md",
+    "reports/Comprehensive Competitive Analysis and Counter_Str_20251003_1821.md",
+    "reports/Strengthening Merchant Network and B2B Segment_20251003_1850.md",
+    "reports/Enhancing Financial Products and Bank Partnerships_20251003_1912.md",
+    "reports/Strategies for Financial Inclusion in Rural and Un_20251003_1933.md",
+    "reports/Opportunities and Risks in Cross_Border Payments a_20251003_1958.md",
+    "reports/User Retention Strategies and Regulatory Complianc_20251003_2020.md"
+  ],
+  "rankings_file": ".output/mrt_rankings_20251003_2027.md",
+  "total_briefs": 10,
+  "current_brief_index": 10,
+  "pending_briefs": [],
+  "created_at": "2025-10-03T14:03:51.597188",
+  "updated_at": "2025-10-03T20:27:45.301891"
+}

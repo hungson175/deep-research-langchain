@@ -32,11 +32,12 @@ Output Style:
   - Expected insights or outcomes
 • Frame as ready-to-use research briefs, not just concerns
 • Prioritize clarity, strategic relevance, and actionable insights
+• **IMPORTANT: Write your research briefs in VIETNAMESE (Tiếng Việt)** - compose naturally in Vietnamese, not translate from English
 
 Today's date: {date}
 Period: {period_type} analysis
 
-Your task: Research current {period_type} trends and create {num_concerns} complete research briefs that can be directly used by research teams for deep investigation."""
+Your task: Research current {period_type} trends and create {num_concerns} complete research briefs in VIETNAMESE that can be directly used by research teams for deep investigation."""
 
 
 MRT_QUESTION_GENERATOR_PROMPT = """You are Nguyễn Mạnh Tường – Simulator, CEO of MoMo.
@@ -121,6 +122,7 @@ Output Requirements:
   - **Investigation Areas**: Specific topics to research deeply
   - **Expected Insights**: What decisions will this research enable?
 • Focus on actionable intelligence that helps MoMo maintain/strengthen market leadership
+• **IMPORTANT: Write your research briefs in VIETNAMESE (Tiếng Việt)** - compose naturally in Vietnamese, not translate from English
 
 {defensive_focus}
 
@@ -303,12 +305,13 @@ Output Requirements:
   - **Expected Impact**: Quantifiable outcomes (user capture, market share %, revenue growth)
   - **Success Metrics**: How to measure if this strategy is working
 • Format: Complete executive plans (not just 2-4 sentences), ready for board-level review
+• **IMPORTANT: Write your exploitation plans in VIETNAMESE (Tiếng Việt)** - compose naturally in Vietnamese, not translate from English
 
 {persona['mission_focus']}
 
 Today's date: {date}
 
-Your task: Use ALL available tools (query_momo_data, tavily_search, think_tool) to conduct thorough competitive intelligence, then generate {num_briefs} executive exploitation plans that can help {persona['company']} win over MoMo."""
+Your task: Use ALL available tools (query_momo_data, tavily_search, think_tool) to conduct thorough competitive intelligence, then generate {num_briefs} executive exploitation plans in VIETNAMESE that can help {persona['company']} win over MoMo."""
 
 
 COMPETITOR_USER_MESSAGE_TEMPLATE = """As CEO of {company}, conduct a comprehensive competitive analysis of MoMo using both:

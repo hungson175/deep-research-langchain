@@ -1,0 +1,17 @@
+{
+  "session_id": "workflow_20251003_112400",
+  "period": "Y",
+  "current_phase": 0,
+  "completed_steps": [],
+  "mrt_topics_file": null,
+  "opponent_attacks_files": {},
+  "defensive_briefs_files": {},
+  "filtered_briefs": [],
+  "completed_reports": [],
+  "rankings_file": null,
+  "total_briefs": 0,
+  "current_brief_index": 0,
+  "pending_briefs": [],
+  "created_at": "2025-10-03T11:24:00.635549",
+  "updated_at": "2025-10-03T11:24:00.635559"
+}

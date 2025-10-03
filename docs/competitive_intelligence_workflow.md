@@ -14,18 +14,20 @@ This document describes the **Complete Strategic Intelligence Workflow** impleme
 
 ```mermaid
 graph LR
-    MRT0[Phase 0:<br/>MrT Topics] --> |1-5 briefs| DR[Phase 3:<br/>Deep Research]
+    MRT0[Phase 0:<br/>MrT Topics] --> |1-5 briefs| FILTER[Phase 2.5:<br/>Brief Filtering]
     OPP[Phase 1:<br/>Opponent Attacks] --> |3 strategies| DEF[Phase 2:<br/>Defensive Briefs]
-    DEF --> |flexible count| DR
+    DEF --> |flexible count| FILTER
+    FILTER --> |unique briefs| DR[Phase 3:<br/>Deep Research]
     DR --> |reports| RANK[Phase 4:<br/>MrT Ranking]
     RANK --> |0-10 scores| END[Prioritized<br/>Action Items]
 
-    style MRT0 fill:#9370db
-    style OPP fill:#ff6b6b
-    style DEF fill:#4ecdc4
-    style DR fill:#95e1d3
-    style RANK fill:#9370db
-    style END fill:#a8e6cf
+    style MRT0 fill:#9370db,stroke:#333,stroke-width:2px,color:#000
+    style OPP fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#000
+    style DEF fill:#4ecdc4,stroke:#333,stroke-width:2px,color:#000
+    style FILTER fill:#ffd700,stroke:#333,stroke-width:2px,color:#000
+    style DR fill:#95e1d3,stroke:#333,stroke-width:2px,color:#000
+    style RANK fill:#9370db,stroke:#333,stroke-width:2px,color:#000
+    style END fill:#a8e6cf,stroke:#333,stroke-width:2px,color:#000
 ```
 
 ## Phase Overview
@@ -50,9 +52,16 @@ graph LR
 - **Output**: Defensive research briefs (quality over quantity)
 - **File**: `.output/mrt_defensive_vs_{opponent}_*.md`
 
+### Phase 2.5: Brief Consolidation & Filtering (NEW)
+- **Agent**: LLM-based deduplication agent
+- **Purpose**: Read all gathered briefs → Filter duplicated/too similar briefs → Consolidate into unique research topics
+- **Input**: MrT topics (1-5) + defensive briefs (flexible count)
+- **Output**: Filtered list of unique research briefs
+- **Process**: Read & think → Identify semantic duplicates → Merge similar briefs → Produce final research queue
+
 ### Phase 3: Deep Research Execution
 - **System**: DeepResearch (Clarifier → Supervisor → 5 Researchers → Report Writer → Insight Generator)
-- **Purpose**: Execute comprehensive research on ALL briefs (MrT topics + defensive briefs)
+- **Purpose**: Execute comprehensive research on FILTERED briefs (after deduplication)
 - **Output**: Vietnamese research reports + HTML insights
 - **Files**: `reports/*.md`, `reports/htmls/*.html`
 
@@ -126,6 +135,75 @@ reports/                          # Final research outputs
 ├── *.md                         # Vietnamese reports
 └── htmls/*.html                 # Interactive insights
 ```
+
+## Pseudo-Code Overview
+
+### Version 1: Simple (No Resume)
+
+```python
+def run_complete_workflow(period="Y"):
+    # Phase 0: MrT generates 1-5 research briefs
+    mrt_topics = TopicsGenerator().generate(period)
+
+    # Phase 1: Opponent CEOs generate attack strategies
+    zalopay_attacks = OpponentCEO("zalopay").generate()
+    vnpay_attacks = OpponentCEO("vnpay").generate()
+
+    # Phase 2: Mr Tường generates defensive briefs
+    defensive_vs_zalopay = MrTDefensive().generate(zalopay_attacks)
+    defensive_vs_vnpay = MrTDefensive().generate(vnpay_attacks)
+
+    # Phase 2.5: Filter duplicates
+    all_briefs = mrt_topics + defensive_vs_zalopay + defensive_vs_vnpay
+    filtered_briefs = BriefFilter().filter(all_briefs)
+
+    # Phase 3: Deep research each brief
+    reports = [DeepResearch().run(brief) for brief in filtered_briefs]
+
+    # Phase 4: MrT ranks reports 0-10
+    rankings = MrTRanking().rank(reports)
+
+    return {briefs, reports, rankings}
+```
+
+### Version 2: With Resume Capability
+
+Pseudo-code (not python !):
+```python
+class WorkflowState:
+    session_id: str
+    current_phase: float  # 0, 1, 2, 2.5, 3, 4
+    completed_steps: List[str]
+    file_paths: Dict  # All output file paths
+    pending_briefs: List[dict]  # For Phase 3 tracking
+
+def run_resumable_workflow(period="Y", session_id=None):
+    # Load or create state
+    state = load_state(session_id) if session_id else WorkflowState()
+
+    # Each phase checks: if state.current_phase <= X
+    # Execute phase → Save outputs → Update state → save_state()
+
+    # Phase 3 special: Track individual brief completion
+    while state.pending_briefs:
+        brief = state.pending_briefs[0]
+        report = DeepResearch().run(brief)
+        state.completed_reports.append(report)
+        state.pending_briefs.pop(0)
+        save_state(state)  # Save after each brief
+
+    return state
+```
+
+**Key Design:**
+- **State file**: `.output/workflow_states/{session_id}.json`
+- **Idempotent**: Each phase checks if already done before executing
+- **Granular Phase 3**: Saves after each brief (longest phase)
+- **Auto-resume**: `run_resumable_workflow(session_id="xxx")`
+
+**When to use:**
+- Version 1: Quick runs, 1-3 briefs
+- Version 2: Production, 5+ briefs, long-running
 
 ## Related Documentation
 

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nghiên Cứu Hành Vi Đầu Tư - Người Dùng Phổ Thông tại Việt Nam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: Một trang tổng quan (dashboard) theo chủ đề, cho phép người dùng khám phá thông tin một cách phi tuyến tính. Cấu trúc bao gồm: 1. Tổng quan nhanh với các chỉ số chính. 2. Chân dung nhà đầu tư (nhân khẩu học). 3. Mục tiêu và các kênh đầu tư (với bộ lọc tương tác theo mức độ rủi ro). 4. Hành vi và các rào cản. 5. Các kết luận chính. Cấu trúc này được chọn để dẫn dắt người dùng từ việc "họ là ai" đến "họ đầu tư như thế nào và tại sao", cuối cùng tổng hợp lại các điểm chính, giúp tối ưu hóa việc tiếp thu thông tin và khám phá dữ liệu. -->
+    <!-- Visualization & Content Choices: 
+        - Chân dung NĐT: Bar chart (Tuổi), Donut chart (Thu nhập) -> Goal: Inform -> Interaction: Tooltip -> Justification: Biểu đồ chuẩn để hiển thị phân bổ nhân khẩu học. Library: Chart.js.
+        - Mục tiêu: Bar chart -> Goal: Compare -> Interaction: Tooltip -> Justification: Dễ dàng so sánh các mục tiêu phổ biến nhất. Library: Chart.js.
+        - Kênh đầu tư: Polar Area chart -> Goal: Compare/Organize -> Interaction: Nút bấm lọc theo mức độ rủi ro (Thấp, Trung bình, Cao) sẽ cập nhật biểu đồ và văn bản mô tả -> Justification: Tương tác này cho phép người dùng chủ động khám phá mối quan hệ giữa khẩu vị rủi ro và lựa chọn kênh đầu tư. Library: Chart.js + Vanilla JS.
+        - Nguồn thông tin: Horizontal Bar chart -> Goal: Compare -> Interaction: Tooltip -> Justification: Hiệu quả để so sánh độ phổ biến của các nguồn khác nhau. Library: Chart.js.
+        - Rào cản: Thẻ HTML/CSS -> Goal: Inform -> Interaction: Hover effect -> Justification: Trình bày các điểm định tính một cách trực quan, tránh sự nhàm chán của việc chỉ dùng biểu đồ. Method: Tailwind CSS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #FDFBF8;
+            color: #3D405B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #E07A5F;
+        }
+        .active-nav {
+            color: #E07A5F;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-xl font-bold text-gray-800">
+                    <a href="#">VN Investment Insights</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="nav-link text-gray-600">Tổng quan</a>
+                    <a href="#profile" class="nav-link text-gray-600">Chân dung NĐT</a>
+                    <a href="#channels" class="nav-link text-gray-600">Kênh & Mục tiêu</a>
+                    <a href="#behavior" class="nav-link text-gray-600">Hành vi & Rào cản</a>
+                    <a href="#takeaways" class="nav-link text-gray-600">Kết luận chính</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden mt-4 flex flex-col space-y-2">
+                <a href="#overview" class="nav-link text-gray-600 block py-1">Tổng quan</a>
+                <a href="#profile" class="nav-link text-gray-600 block py-1">Chân dung NĐT</a>
+                <a href="#channels" class="nav-link text-gray-600 block py-1">Kênh & Mục tiêu</a>
+                <a href="#behavior" class="nav-link text-gray-600 block py-1">Hành vi & Rào cản</a>
+                <a href="#takeaways" class="nav-link text-gray-600 block py-1">Kết luận chính</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section id="overview" class="text-center mb-20 pt-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#3D405B] mb-4">Hành Vi Đầu Tư Của Người Dùng Phổ Thông</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-10">Báo cáo tương tác này phân tích sâu về chân dung, mục tiêu, và hành vi của các nhà đầu tư cá nhân tại Việt Nam, mang đến cái nhìn toàn cảnh về một thị trường năng động.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-[#81B29A]">
+                    <h3 class="text-3xl font-bold text-[#3D405B]">45%</h3>
+                    <p class="text-gray-500 mt-1">Người trưởng thành đã tham gia đầu tư</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-[#F2CC8F]">
+                    <h3 class="text-3xl font-bold text-[#3D405B]">Chứng khoán</h3>
+                    <p class="text-gray-500 mt-1">Là kênh đầu tư phổ biến nhất</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-[#E07A5F]">
+                    <h3 class="text-3xl font-bold text-[#3D405B]">62%</h3>
+                    <p class="text-gray-500 mt-1">Cảm thấy thiếu kiến thức khi ra quyết định</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="profile" class="mb-20 pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">Chân Dung Nhà Đầu Tư</h2>
+                <p class="text-md text-gray-600 max-w-2xl mx-auto mt-2">Phần này cung cấp cái nhìn tổng quan về đặc điểm nhân khẩu học của các nhà đầu tư cá nhân. Dữ liệu về độ tuổi và mức thu nhập giúp chúng ta hiểu rõ hơn "họ là ai", từ đó làm nền tảng để phân tích các hành vi và quyết định đầu tư ở các phần sau.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-4">Phân Bổ Theo Nhóm Tuổi</h3>
+                    <div class="chart-container">
+                        <canvas id="ageChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-4">Phân Bổ Theo Thu Nhập (Tháng)</h3>
+                    <div class="chart-container">
+                        <canvas id="incomeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="channels" class="mb-20 pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">Mục Tiêu & Kênh Đầu Tư</h2>
+                <p class="text-md text-gray-600 max-w-2xl mx-auto mt-2">Tại sao họ đầu tư và họ chọn kênh nào? Phần này khám phá các động lực tài chính chính và sự phân bổ vốn vào các loại tài sản khác nhau. Sử dụng các nút lọc để xem các kênh đầu tư được ưa chuộng tương ứng với từng khẩu vị rủi ro.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-4">Mục Tiêu Đầu Tư Hàng Đầu</h3>
+                     <div class="chart-container h-96 max-h-[450px]">
+                        <canvas id="goalsChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-4">Độ Phổ Biến Của Các Kênh Đầu Tư</h3>
+                    <div class="flex justify-center space-x-2 mb-4">
+                        <button class="risk-filter-btn active px-4 py-2 text-sm font-medium rounded-full bg-[#3D405B] text-white" data-risk="all">Tất cả</button>
+                        <button class="risk-filter-btn px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700" data-risk="low">Rủi ro thấp</button>
+                        <button class="risk-filter-btn px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700" data-risk="medium">Rủi ro TB</button>
+                        <button class="risk-filter-btn px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700" data-risk="high">Rủi ro cao</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="investmentChannelsChart"></canvas>
+                    </div>
+                    <p id="channel-description" class="text-center text-sm text-gray-500 mt-4 h-10">Tổng quan về các kênh đầu tư phổ biến nhất trong danh mục của nhà đầu tư cá nhân.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="behavior" class="mb-20 pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">Hành Vi & Rào Cản</h2>
+                <p class="text-md text-gray-600 max-w-2xl mx-auto mt-2">Phần này đi sâu vào cách các nhà đầu tư tìm kiếm thông tin và những thách thức lớn nhất mà họ gặp phải trên hành trình của mình. Việc hiểu rõ các rào cản là chìa khóa để cải thiện và hỗ trợ cộng đồng nhà đầu tư.</p>
+            </div>
+            <div class="grid md:grid-cols-5 gap-8">
+                <div class="md:col-span-3 bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-center mb-4">Nguồn Thông Tin Tham Khảo Chính</h3>
+                     <div class="chart-container h-96 max-h-[450px]">
+                        <canvas id="infoSourceChart"></canvas>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <h3 class="text-xl font-semibold text-center mb-4">Những Rào Cản Hàng Đầu</h3>
+                    <div class="space-y-4">
+                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 transition-transform hover:scale-105">
+                            <div class="text-3xl">🧠</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Thiếu kiến thức</h4>
+                                <p class="text-sm text-gray-500">Cảm thấy không đủ hiểu biết để ra quyết định.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 transition-transform hover:scale-105">
+                            <div class="text-3xl">😨</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Sợ thua lỗ</h4>
+                                <p class="text-sm text-gray-500">Lo ngại về rủi ro và biến động thị trường.</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 transition-transform hover:scale-105">
+                             <div class="text-3xl">💰</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Hạn chế về vốn</h4>
+                                <p class="text-sm text-gray-500">Cho rằng cần số tiền lớn để bắt đầu.</p>
+                            </div>
+                        </div>
+                         <div class="bg-white p-5 rounded-lg shadow-md flex items-center space-x-4 transition-transform hover:scale-105">
+                             <div class="text-3xl">⚙️</div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Thủ tục phức tạp</h4>
+                                <p class="text-sm text-gray-500">Khó khăn trong việc mở tài khoản và giao dịch.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="takeaways" class="pt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3D405B]">Kết Luận Chính</h2>
+                <p class="text-md text-gray-600 max-w-2xl mx-auto mt-2">Dựa trên dữ liệu đã phân tích, đây là những xu hướng và phát hiện nổi bật nhất về hành vi đầu tư của người dùng phổ thông tại Việt Nam.</p>
+            </div>
+            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="font-bold text-lg mb-2 text-[#81B29A]">Sự trỗi dậy của nhà đầu tư trẻ</h4>
+                    <p class="text-gray-600">Nhóm tuổi 25-34 chiếm đa số, cho thấy một thế hệ nhà đầu tư mới, năng động và sẵn sàng chấp nhận công nghệ. Họ thường có xu hướng ưa thích các kênh đầu tư có tiềm năng tăng trưởng cao như chứng khoán và crypto.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="font-bold text-lg mb-2 text-[#E07A5F]">"Cơn khát" kiến thức tài chính</h4>
+                    <p class="text-gray-600">Mặc dù số lượng người tham gia đầu tư tăng, "Thiếu kiến thức" vẫn là rào cản lớn nhất. Điều này tạo ra một nhu cầu lớn về các nền tảng giáo dục tài chính đáng tin cậy và dễ tiếp cận để giúp nhà đầu tư tự tin hơn.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="font-bold text-lg mb-2 text-[#F2CC8F]">Đa dạng hóa nhưng vẫn còn truyền thống</h4>
+                    <p class="text-gray-600">Chứng khoán là kênh dẫn đầu, nhưng Vàng và Bất động sản vẫn giữ vị trí quan trọng trong danh mục. Điều này cho thấy sự kết hợp giữa tư duy đầu tư hiện đại và tâm lý "ăn chắc mặc bền" truyền thống.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="font-bold text-lg mb-2 text-[#3D405B]">Ảnh hưởng của mạng xã hội</h4>
+                    <p class="text-gray-600">Các cộng đồng và chuyên gia trên mạng xã hội đã trở thành nguồn thông tin quan trọng, chỉ đứng sau bạn bè và người thân. Xu hướng này nhấn mạnh tầm quan trọng của việc xây dựng uy tín và chia sẻ thông tin chất lượng trên các nền tảng số.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-gray-100 mt-20">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+            <p>&copy; 2025 Investment Behavior Research. Dữ liệu trong báo cáo này là giả định cho mục đích minh họa.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const chartColors = {
+                primary: '#3D405B',
+                secondary: '#81B29A',
+                tertiary: '#E07A5F',
+                accent: '#F2CC8F',
+                lightGray: '#E8E8E8',
+                mediumGray: '#BDBDBD',
+            };
+
+            const defaultChartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: "'Be Vietnam Pro', sans-serif" },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        bodyFont: { family: "'Be Vietnam Pro', sans-serif" },
+                        titleFont: { family: "'Be Vietnam Pro', sans-serif" }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                             font: { family: "'Be Vietnam Pro', sans-serif" }
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                             font: { family: "'Be Vietnam Pro', sans-serif" }
+                        },
+                         grid: { color: '#f0f0f0' }
+                    }
+                }
+            };
+            
+            const ageData = {
+                labels: ['Dưới 25', '25-34', '35-44', '45-54', 'Trên 55'],
+                datasets: [{
+                    label: 'Phân Bổ Tuổi',
+                    data: [18, 45, 25, 9, 3],
+                    backgroundColor: [chartColors.secondary, chartColors.primary, chartColors.accent, chartColors.tertiary, chartColors.mediumGray],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 2
+                }]
+            };
+            new Chart(document.getElementById('ageChart'), {
+                type: 'bar',
+                data: ageData,
+                options: { ...defaultChartOptions, indexAxis: 'y' }
+            });
+
+            const incomeData = {
+                labels: ['Dưới 15tr', '15-30tr', '30-50tr', 'Trên 50tr'],
+                datasets: [{
+                    label: 'Thu Nhập',
+                    data: [25, 48, 19, 8],
+                    backgroundColor: [chartColors.secondary, chartColors.primary, chartColors.accent, chartColors.tertiary],
+                    hoverOffset: 4
+                }]
+            };
+            new Chart(document.getElementById('incomeChart'), {
+                type: 'doughnut',
+                data: incomeData,
+                options: { ...defaultChartOptions, scales: { x: { display: false }, y: { display: false } } }
+            });
+            
+            const goalsData = {
+                labels: ['Tăng trưởng tài sản', 'Mua nhà/đất', 'Tự do tài chính', 'Quỹ hưu trí', 'Cho con đi học'],
+                datasets: [{
+                    label: 'Tỷ lệ lựa chọn',
+                    data: [75, 58, 55, 40, 35],
+                    backgroundColor: chartColors.secondary,
+                }]
+            };
+            new Chart(document.getElementById('goalsChart'), {
+                type: 'bar',
+                data: goalsData,
+                 options: { ...defaultChartOptions, scales: { y: { beginAtZero: true } } }
+            });
+
+            const investmentChannelsData = {
+                labels: ['Chứng khoán', 'Vàng', 'Gửi tiết kiệm', 'Bất động sản', 'Quỹ đầu tư', 'Crypto'],
+                datasets: [{
+                    data: [78, 65, 60, 55, 45, 30],
+                    backgroundColor: [
+                        'rgba(224, 122, 95, 0.7)',
+                        'rgba(242, 204, 143, 0.7)',
+                        'rgba(129, 178, 154, 0.7)',
+                        'rgba(61, 64, 91, 0.7)',
+                        'rgba(189, 189, 189, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                }]
+            };
+            
+            const channelsRiskMapping = {
+                'Chứng khoán': 'high',
+                'Vàng': 'low',
+                'Gửi tiết kiệm': 'low',
+                'Bất động sản': 'medium',
+                'Quỹ đầu tư': 'medium',
+                'Crypto': 'high'
+            };
+            
+            const channelDescriptionText = {
+                 all: 'Tổng quan về các kênh đầu tư phổ biến nhất trong danh mục của nhà đầu tư cá nhân.',
+                 low: 'Các kênh có độ an toàn cao, lợi nhuận ổn định, phù hợp với nhà đầu tư ngại rủi ro.',
+                 medium: 'Các kênh cân bằng giữa rủi ro và lợi nhuận, yêu cầu tầm nhìn trung và dài hạn.',
+                 high: 'Các kênh có biến động mạnh, tiềm năng lợi nhuận cao nhưng đi kèm rủi ro lớn.'
+            };
+            
+            const channelsChart = new Chart(document.getElementById('investmentChannelsChart'), {
+                type: 'polarArea',
+                data: investmentChannelsData,
+                options: { ...defaultChartOptions, scales: { r: { ticks: { display: false } } } }
+            });
+            
+            const riskFilterBtns = document.querySelectorAll('.risk-filter-btn');
+            riskFilterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const riskLevel = btn.dataset.risk;
+
+                    riskFilterBtns.forEach(b => b.classList.remove('active', 'bg-[#3D405B]', 'text-white'));
+                    riskFilterBtns.forEach(b => b.classList.add('bg-gray-200', 'text-gray-700'));
+                    btn.classList.add('active', 'bg-[#3D405B]', 'text-white');
+                    btn.classList.remove('bg-gray-200', 'text-gray-700');
+                    
+                    const originalData = investmentChannelsData.datasets[0].data;
+                    const originalLabels = investmentChannelsData.labels;
+                    
+                    const filteredData = [];
+                    const filteredLabels = [];
+                    const filteredColors = [];
+
+                    if (riskLevel === 'all') {
+                        channelsChart.data.labels = originalLabels;
+                        channelsChart.data.datasets[0].data = originalData;
+                        channelsChart.data.datasets[0].backgroundColor = investmentChannelsData.datasets[0].backgroundColor;
+                    } else {
+                        originalLabels.forEach((label, index) => {
+                            if (channelsRiskMapping[label] === riskLevel) {
+                                filteredLabels.push(label);
+                                filteredData.push(originalData[index]);
+                                filteredColors.push(investmentChannelsData.datasets[0].backgroundColor[index]);
+                            }
+                        });
+                        channelsChart.data.labels = filteredLabels;
+                        channelsChart.data.datasets[0].data = filteredData;
+                        channelsChart.data.datasets[0].backgroundColor = filteredColors;
+                    }
+                    
+                    document.getElementById('channel-description').textContent = channelDescriptionText[riskLevel];
+                    
+                    channelsChart.update();
+                });
+            });
+
+            const infoSourceData = {
+                labels: ['Bạn bè, người thân', 'Cộng đồng MXH', 'Báo chí, tin tức', 'Chuyên gia tài chính', 'Tự nghiên cứu'],
+                datasets: [{
+                    label: 'Mức độ tin cậy',
+                    data: [80, 72, 65, 45, 38],
+                    backgroundColor: chartColors.accent,
+                }]
+            };
+            new Chart(document.getElementById('infoSourceChart'), {
+                type: 'bar',
+                data: infoSourceData,
+                options: { ...defaultChartOptions, indexAxis: 'y' }
+            });
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active-nav');
+                            const href = link.getAttribute('href').substring(1);
+                            if (href === id) {
+                                link.classList.add('active-nav');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

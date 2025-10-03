@@ -38,6 +38,11 @@ python -m src.agents.mrt_defensive_agent  # Demo mode (reads latest opponent att
 # MrT Ranking Agent - Evaluate research reports for strategic value
 python -m src.agents.mrt_ranking_agent  # Demo mode (ranks all reports in reports/)
 
+# Complete Workflow - Full 5-phase pipeline (resumable)
+python -m src.agents.complete_workflow_v2 Y                     # New workflow
+python -m src.agents.complete_workflow_v2 list                  # List sessions
+python -m src.agents.complete_workflow_v2 resume <session_id>   # Resume from failure
+
 # Run individual components for testing
 python -m src.agents.clarifier          # Test clarification phase
 python -m src.agents.supervisor         # Test supervisor coordination
@@ -86,6 +91,8 @@ deep_research_langchain/
 │   │   ├── opp_ceo_agent_topic_generator.py  # Opponent CEOs: ZaloPay/VNPay competitive intelligence
 │   │   ├── mrt_defensive_agent.py # Mr Tường: defensive strategy against opponent attacks
 │   │   ├── mrt_ranking_agent.py   # MrT: evaluate research reports 0-10 for strategic value
+│   │   ├── brief_filter_agent.py  # LLM-based brief deduplication
+│   │   ├── complete_workflow_v2.py # Resumable 5-phase workflow (with state tracking)
 │   │   └── base_ceo_agent.py      # Base class for all CEO persona agents
 │   ├── core/                  # Core orchestration systems
 │   │   ├── deep_research_system.py # Main orchestration system
@@ -222,6 +229,19 @@ Simulates competitor CEOs (ZaloPay/VNPay) conducting competitive intelligence on
 - Auto-discovers reports in `reports/` directory or accepts specific file paths
 - Saves rankings to `.output/mrt_rankings_*.md` with summary statistics and detailed assessments
 - **NOT a BaseCEOAgent**: Simpler agent for evaluation only (no tool-calling loop needed)
+
+**Complete Workflow Orchestrator** (`src/agents/complete_workflow_v2.py`)
+- Full state tracking with resume capability
+- Runs all 5 phases: MrT Topics → Opponent Attacks → Defensive → Filtering → Deep Research → Ranking
+- Saves progress after each step to `.output/workflow_states/{session_id}.json`
+- Granular Phase 3 tracking: Saves after each brief completion (longest phase)
+- Idempotent: Checks if step already completed before executing
+- **Agent independence**: Calls agents via `.generate()`, handles formatting/saving in workflow
+- Usage:
+  - New run: `python -m src.agents.complete_workflow_v2 [D|W|M|Q|Y]`
+  - List sessions: `python -m src.agents.complete_workflow_v2 list`
+  - Resume: `python -m src.agents.complete_workflow_v2 resume <session_id>`
+- State file persists: session_id, current_phase (0, 1, 2, 2.5, 3, 4), completed_steps, file_paths, pending_briefs
 
 ## Key Components
 
